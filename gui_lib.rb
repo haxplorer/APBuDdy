@@ -3,20 +3,20 @@ require 'Classes.rb'
 
 class Question_options_widget < Qt::Widget
 	
-  def initialize(name,label,options)
-  	super(nil)
-    @hbox = Qt::HBox.new(self)
-    @lbl = Qt::Label.new(@hbox,label)
-    @lbl.setText(label)
-    @bgrp = Qt::ButtonGroup.new(1,Qt::GroupBox::Horizontal,"Button Group 1 (exclusive)", @hbox)
-    @box = QVBoxLayout.new( @hbox ,11,6)
-#		@box.addWidget(@bgrp)
-#		@bgrp.setExclusive(TRUE)
+	def initialize(name,label,options)
+  		super(nil)
+		@hbox = Qt::HBox.new(self)
+		@lbl = Qt::Label.new(@hbox,label)
+		@lbl.setText(label)
+		@bgrp = Qt::ButtonGroup.new(1,Qt::GroupBox::Horizontal,"Button Group 1 (exclusive)", @hbox)
+		@box = Qt::VBoxLayout.new(@hbox)
+		@box.addWidget(@bgrp)
+		@bgrp.setExclusive(TRUE)
 #insert radiobuttons
-#		options.each do |option_item|
-#			QRadioButton.new(option_item.response,bgrp)
-#		end
-    end
+		options.each do |option_item|
+			Qt::RadioButton.new(option_item.get_response,@bgrp)
+		end
+	end
 end
 
 class Question_text_widget < Qt::Widget
@@ -30,33 +30,26 @@ class Question_text_widget < Qt::Widget
 end
 
 def generate_question_widget(question_queue)
-
-	a = Qt::Application.new(ARGV)
-	w = Qt::HBox.new
-
 	question_queue.each do |question_item|
 		if question_item.get_optionset.size==0
-			w = Question_text_widget.new(question_item.get_name,question_item.get_query_string)
+			wstackMain.addWidget(Question_text_widget.new(question_item.get_name,question_item.get_query_string),1)
 		else
-			w = Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset)
+			wstackMain.addWidget(Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset),1)
 		end
 	end
 
-	a.mainWidget = w
-	w.show
-	a.exec
 end
 
-
+=begin
 ##########################
 #Test the above functions#
 ##########################
 Question.create_yes_no("sample","Test Query")
 ##Comment out the previous line and Uncomment the next line to see that it works for the Question_text_widget class
-#Question.create_text_question("sample","Test Query")
+Question.create_text_question("sample","Test Query")
 generate_question_widget(Question.get_question_queue)
 
 ##########################
 #Testing ends            #
 ##########################
-
+=end

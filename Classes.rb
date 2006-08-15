@@ -94,6 +94,9 @@ class Option
 		@response = option_string
 		@credit = credit
 	end
+	def get_response
+		return @response
+	end
 end
 
 
