@@ -1,27 +1,31 @@
 require 'Qt'
 require 'Classes.rb'
 
-class Question_options_widget < Qt::HBox
-	def initialize(name,label,options)
-        	super
-#		@lbl = Qt::Label.new(self,label)
-#		@lbl.setText(label)
-#		@bgrp = QButtonGroup.new(1,QGroupBox::Horizontal,"Button Group 1 (exclusive)",self)
-#		@box = QVBoxLayout.new(self,11,6)
+class Question_options_widget < Qt::Widget
+	
+  def initialize(name,label,options)
+  	super(nil)
+    @hbox = Qt::HBox.new(self)
+    @lbl = Qt::Label.new(@hbox,label)
+    @lbl.setText(label)
+    @bgrp = Qt::ButtonGroup.new(1,Qt::GroupBox::Horizontal,"Button Group 1 (exclusive)", @hbox)
+    @box = QVBoxLayout.new( @hbox ,11,6)
 #		@box.addWidget(@bgrp)
 #		@bgrp.setExclusive(TRUE)
 #insert radiobuttons
 #		options.each do |option_item|
 #			QRadioButton.new(option_item.response,bgrp)
 #		end
-        end
+    end
 end
-class Question_text_widget < Qt::HBox
+
+class Question_text_widget < Qt::Widget
 	def initialize(name,label)
 		super
-		@lbl = Qt::Label.new(self,label)
+		@hbox = Qt::HBox.new(self)
+		@lbl = Qt::Label.new(@hbox,label)
 		@lbl.setText(label)
-		@txt = Qt::LineEdit.new(self,name)
+		@txt = Qt::LineEdit.new(@hbox,name)
 	end
 end
 
