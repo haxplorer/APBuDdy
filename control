@@ -1,0 +1,9 @@
+Package: kopete
+Version: 0.12-beta1
+Section: contrib/devel
+Priority: optional
+Architecture: all
+Depends: kdelibs4c2a (>= 4:3.5.1-2), kopete (>= 4:3.5.1-2), libacl1 (>= 2.2.11-1), libart-2.0-2 (>= 2.3.16), libattr1 (>= 2.4.4-1), libaudio2, libc6 (>= 2.3.5-1), libfam0, libfontconfig1 (>= 2.3.0), libfreetype6 (>= 2.1.5-1), libgcc1 (>= 1:4.0.2), libglib2.0-0 (>= 2.8.5), libice6, libidn11 (>= 0.5.18), libjpeg62, libpcre3 (>= 4.5), libpng12-0 (>= 1.2.8rel), libqt3-mt (>= 3:3.3.5), libsm6, libssl0.9.8 (>= 0.9.8a-1), libstdc++6 (>= 4.0.2-4), libx11-6, libxcursor1 (>> 1.1.2), libxext6, libxft2 (>> 2.1.1), libxi6, libxinerama1, libxml2 (>= 2.6.23), libxrandr2, libxrender1 (>= 1:0.9.0.2), libxslt1.1 (>= 1.1.15), libxt6, zlib1g (>= 1:1.2.1)
+Suggests: 
+Maintainer: Andre-andre@duffeck.de
+Description: Kopete is an Instant Messaging client for AIM, Gadu-Gadu, ICQ, IRC, Jabber, GroupWise, MeanWhile, MSN, Yahoo and WinPopup. It uses the KDE platform and aims to provide integrated messaging that puts your contacts in the foreground, not the IM system they use.

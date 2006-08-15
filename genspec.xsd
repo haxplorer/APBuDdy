@@ -1,0 +1,361 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+<xs:element name="CommonDescription">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="Header">
+	<xs:complexType>
+	<xs:all>
+	<xs:element name="Package">
+		<xs:complexType mixed="true">
+		<xs:sequence>
+			<xs:element name="Name">
+				<xs:complexType mixed="true">
+					<xs:sequence>
+						<xs:element name="switch">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="case" minOccurs="0" maxOccurs="unbounded">
+										<xs:complexType mixed="true">
+											<xs:attribute name="criteria" type="xs:string"/>
+											<xs:attribute name="value" type="xs:string"/>
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="default" type="xs:string"/>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Version">
+				<xs:complexType mixed="true">
+					<xs:all>
+						<xs:element name="Release" type="xs:string"/>
+						<xs:element name="Group" type="xs:string"/>
+						<xs:element name="Priority">
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="required"/>
+									<xs:enumeration value="important"/>
+									<xs:enumeration value="standard"/>
+									<xs:enumeration value="optional"/>
+									<xs:enumeration value="extra"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Architecture" type="xs:string"/>
+						<xs:element name="Depends">
+							<xs:complexType mixed="true">
+								<xs:sequence>
+									<xs:element name="dist">
+										<xs:complexType mixed="true">
+										<xs:sequence>
+											<xs:element name="vendor">
+												<xs:complexType mixed="true">
+													<xs:attribute name="Name" type="xs:string"/>
+												</xs:complexType>
+											</xs:element>
+											<xs:element name="default" type="xs:string"/>
+										</xs:sequence>
+											<xs:attribute name="name" type="xs:string"/>
+											<xs:attribute name="version-lt" type="xs:string"/>
+											<xs:attribute name="version-gt" type="xs:string"/>
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="default" type="xs:string"/>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="Suggests">
+							<xs:complexType mixed="true">
+								<xs:sequence>
+									<xs:element name="dist">
+										<xs:complexType mixed="true">
+											<xs:attribute name="name" type="xs:string"/>
+											<xs:attribute name="version-lt" type="xs:string"/>
+											<xs:attribute name="version-gt" type="xs:string"/>
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="default" type="xs:string"/>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="Conflicts">
+							<xs:complexType mixed="true">
+								<xs:sequence>
+									<xs:element name="dist">
+										<xs:complexType mixed="true">
+											<xs:attribute name="name" type="xs:string"/>
+											<xs:attribute name="version-lt" type="xs:string"/>
+											<xs:attribute name="version-gt" type="xs:string"/>
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="default" type="xs:string"/>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="Patches">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Patch" minOccurs="0" maxOccurs="unbounded">
+											<xs:complexType mixed="true">
+												<xs:attribute name="ifdistro" type="xs:string" use="optional"/>
+												<xs:attribute name="ifarch" type="xs:string" use="optional"/>
+												<xs:attribute name="for-source-id" type="xs:string"/>
+											</xs:complexType>
+										</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="Vendor" type="xs:string"/>
+						<xs:element name="Section" minOccurs="0" type="xs:string"/>
+					</xs:all>
+					<xs:attribute name="value">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:pattern value="[0-9]+\.[0-9]+\.[0-9]+"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+					<xs:attribute name="type">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="incremental"/>
+								<xs:enumeration value="vendor"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	</xs:element>
+	<xs:element name="Sources">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Source" maxOccurs="unbounded">
+					<xs:complexType mixed="true">
+						<xs:attribute name="id" type="xs:integer"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Maintainer" type="xs:string"/>
+	<xs:element name="Essential">
+		<xs:simpleType>
+			<xs:restriction base="xs:string">
+				<xs:enumeration value="yes"/>
+				<xs:enumeration value="no"/>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="License" type="xs:string"/>
+	<xs:element name="Authors" type="xs:string"/>
+	<xs:element name="Summary">
+		<xs:complexType mixed="true">
+			<xs:sequence>
+				<xs:element name="switch" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="case">
+								<xs:complexType mixed="true">
+									<xs:attribute name="tag" type="xs:string"/>
+									<xs:attribute name="value" type="xs:string"/>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="default" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Description">
+		<xs:complexType mixed="true">
+			<xs:attribute name="case" default="Standard">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="Standard"/>
+						<xs:enumeration value="Suse"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	</xs:all>
+	</xs:complexType>
+	</xs:element>
+	<xs:element name="Prep">
+	<xs:complexType mixed="true">
+		<xs:sequence>
+			<xs:element name="Unpack" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType mixed="true">
+					<xs:attribute name="cmdcount-before" type="xs:integer" use="optional"/>
+					<xs:attribute name="before-cd" type="xs:integer" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Apply" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType mixed="true">
+					<xs:attribute name="cmdcount-before" type="xs:integer" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="cmd" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	</xs:element>
+	<xs:element name="Build">
+	<xs:complexType mixed="true">
+		<xs:sequence>
+			<xs:element name="if" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="configure-flag" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+						<xs:element name="commands" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="criteria" type="xs:string"/>
+					<xs:attribute name="condition" type="xs:string"/>
+					<xs:attribute name="value" type="xs:string"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="common-commands" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="make-target" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="flags" type="xs:string" use="optional"/>
+	</xs:complexType>
+	</xs:element>
+	<xs:element name="Install">
+	<xs:complexType mixed="true">
+		<xs:sequence>
+			<xs:element name="install">
+				<xs:complexType mixed="true">
+					<xs:sequence>
+						<xs:element name="file" maxOccurs="unbounded">
+							<xs:complexType mixed="true">
+								<xs:attribute name="flags" type="xs:string" use="optional"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="destdir" type="xs:string"/>
+						<xs:element name="install-target" type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>     
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	</xs:element>
+	<xs:element name="Post">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element name="Post-calls" minOccurs="0" maxOccurs="unbounded" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	</xs:element>
+	<xs:element name="Clean">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element name="Clean-calls" minOccurs="0" maxOccurs="unbounded" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	</xs:element>
+	<xs:element name="Files">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element name="file" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType mixed="true">
+					<xs:sequence>
+						<xs:element name="permissions">
+							<xs:complexType mixed="true">
+							<xs:sequence>
+								<xs:element name="if" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType mixed="true">
+										<xs:attribute name="criteria" type="xs:string"/>
+										<xs:attribute name="condition">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:enumeration value="eq"/>
+													<xs:enumeration value="lt"/>
+													<xs:enumeration value="gt"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:attribute>
+										<xs:attribute name="value" type="xs:string"/>
+									</xs:complexType>
+								</xs:element>
+								<xs:element name="default" type="xs:string"/>
+							</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:attribute name="disposition" type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="config" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="defattr" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="dir" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	</xs:element>
+	<xs:element name="Changelog" maxOccurs="unbounded">
+	<xs:complexType mixed="true">
+		<xs:sequence>
+			<xs:element name="Date">
+				<xs:complexType>
+					<xs:all>
+						<xs:element name="Day">
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="Mon"/>
+									<xs:enumeration value="Tue"/>
+									<xs:enumeration value="Wed"/>
+									<xs:enumeration value="Thu"/>
+									<xs:enumeration value="Fri"/>
+									<xs:enumeration value="Sat"/>
+									<xs:enumeration value="Sun"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Month">
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="Jan"/>
+									<xs:enumeration value="Feb"/>
+									<xs:enumeration value="Mar"/>
+									<xs:enumeration value="Apr"/>
+									<xs:enumeration value="May"/>
+									<xs:enumeration value="Jun"/>
+									<xs:enumeration value="Jul"/>
+									<xs:enumeration value="Aug"/>
+									<xs:enumeration value="Sep"/>
+									<xs:enumeration value="Oct"/>
+									<xs:enumeration value="Nov"/>
+									<xs:enumeration value="Dec"/>
+								</xs:restriction>
+							</xs:simpleType>	
+						</xs:element>
+						<xs:element name="Date-val">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:pattern value="[0-3][0-9]"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:all>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Name" type="xs:string"/>
+			<xs:element name="email">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:pattern value=".+@.+\..+"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Changes" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:element>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+</xs:schema>

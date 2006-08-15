@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<CommonDescription xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="genspec.xsd">
+
+	<Header>
+		<Package Name="kopete">
+			<Version value="0.12">
+				<Release>beta1</Release>
+				<Group>Productivity/Networking</Group>
+				<Priority>optional</Priority>
+				<Architecture>all</Architecture>
+				<Depends>kdelibs4c2a (>= 4:3.5.1-2), kopete (>= 4:3.5.1-2), libacl1 (>= 2.2.11-1), libart-2.0-2 (>= 2.3.16), libattr1 (>= 2.4.4-1), libaudio2, libc6 (>= 2.3.5-1), libfam0, libfontconfig1 (>= 2.3.0), libfreetype6 (>= 2.1.5-1), libgcc1 (>= 1:4.0.2), libglib2.0-0 (>= 2.8.5), libice6, libidn11 (>= 0.5.18), libjpeg62, libpcre3 (>= 4.5), libpng12-0 (>= 1.2.8rel), libqt3-mt (>= 3:3.3.5), libsm6, libssl0.9.8 (>= 0.9.8a-1), libstdc++6 (>= 4.0.2-4), libx11-6, libxcursor1 (>> 1.1.2), libxext6, libxft2 (>> 2.1.1), libxi6, libxinerama1, libxml2 (>= 2.6.23), libxrandr2, libxrender1 (>= 1:0.9.0.2), libxslt1.1 (>= 1.1.15), libxt6, zlib1g (>= 1:1.2.1)</Depends>
+				<Suggests></Suggests>
+				<Conflicts></Conflicts>
+				<BuildRoot>%{_tmppath}/%{name}-%{version}-build</BuildRoot>
+				<Patches>
+				</Patches>
+				<Vendor></Vendor>
+				<Splitrule></Splitrule>
+				<Section>contrib/devel</Section>
+			</Version>
+		</Package>
+		<Sources>
+			<Source>http://superb-west.dl.sourceforge.net/sourceforge/kopete/kopete-0.12.0.tar.bz2</Source>
+		</Sources>
+		<Maintainer>Andre-andre@duffeck.de</Maintainer>
+		<Essential>no</Essential>
+		<License>GPL</License>
+		<Authors>The Kopete Team - kopete-devel@kde.org</Authors>
+		<Summary>KDE Instant Messenger</Summary>
+		<Description case="Standard">Kopete is an Instant Messaging client for AIM, Gadu-Gadu, ICQ, IRC, Jabber, GroupWise, MeanWhile, MSN, Yahoo and WinPopup. It uses the KDE platform and aims to provide integrated messaging that puts your contacts in the foreground, not the IM system they use.</Description>
+	</Header>
+
+	<Prep>
+		<Setup></Setup>
+		<Patch></Patch>
+	</Prep>
+
+	<Build>
+		<configure-flags>enable-smpppd</configure-flags>
+	</Build>
+
+	<Install>
+		<install-target>install</install-target>
+	</Install>
+	
+	<Post>
+		<Post-calls>/sbin/ldconfig</Post-calls>
+	</Post>
+
+	<Clean>
+	</Clean>
+
+	<Files>
+		<docs>/opt/kde3/share/doc/HTML/en/kopete</docs>
+		<dir>/opt/kde3/share/services/kconfiguredialog</dir>
+		<dir>/opt/kde3/%_lib/kconf_update_bin</dir>
+		<dir>/opt/kde3/share/sounds</dir>
+		<files>/opt/kde3/bin/kopete</files>
+		<files>/opt/kde3/bin/kopete_latexconvert.sh</files>
+		<files>/opt/kde3/share/icons/*/*/*/kopete*</files>
+		<files>/opt/kde3/share/mimelnk/application/x-icq.desktop</files>
+		<files>/opt/kde3/share/mimelnk/application/x-kopete-emoticons.desktop</files>
+		<files>/opt/kde3/share/services/aim.protocol</files>
+		<files>/opt/kde3/share/services/irc.protocol</files>
+		<files>/opt/kde3/%_lib/libkopete*</files>
+		<files>/opt/kde3/%_lib/kde3/kcm_kopete_*</files>
+		<files>/opt/kde3/%_lib/kde3/kopete_*</files>
+		<files>/opt/kde3/%_lib/kde3/libkrichtexteditpart.*</files>
+		<files>/opt/kde3/%_lib/kde3/kio_jabberdisco.*</files>
+		<files>/opt/kde3/%_lib/kde3/plugins/designer/libkopetewidgets.*</files>
+		<files>/opt/kde3/%_lib/kconf_update_bin/kopete-*</files>
+		<files>/opt/kde3/share/config.kcfg/historyconfig.kcfg</files>
+		<files>/opt/kde3/share/applications/kde/kopete.desktop</files>
+		<files>/opt/kde3/share/apps/kopete*</files>
+		<files>/opt/kde3/share/servicetypes/kopete*</files>
+		<files>/opt/kde3/share/services/kconfiguredialog/kopete*</files>
+		<files>/opt/kde3/share/services/kopete*.desktop</files>
+		<files>/opt/kde3/share/services/chatwindow.desktop</files>
+		<files>/opt/kde3/share/services/emailwindow.desktop</files>
+		<files>/opt/kde3/share/services/jabberdisco.protocol</files>
+		<files>/opt/kde3/share/sounds/Kopete*</files>
+		<files>/opt/kde3/share/apps/kconf_update/kopete-*</files>
+		<files>/opt/kde3/share/config.kcfg/latexconfig.kcfg</files>
+		<files>/opt/kde3/share/config.kcfg/kopete.kcfg</files>
+		<files>/opt/kde3/share/config.kcfg/kopeteidentityconfigpreferences.kcfg</files>
+		<files>/opt/kde3/share/config.kcfg/nowlisteningconfig.kcfg</files>
+		<files>/opt/kde3/include/kopete</files>
+
+	</Files>
+
+	<Changelog>
+		<Date>Thu Mar 9 2006</Date>
+		<Name>Stephenson</Name>
+		<email>wstephenson@suse.de</email>
+		<Changes>Spec file created from dummy and kdenetwork3 by</Changes>
+	</Changelog>
+
+</CommonDescription>
