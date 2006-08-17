@@ -30,19 +30,18 @@ class Question_text_widget < Qt::Widget
 	end
 end
 
-def generate_question_widget_list(question_queue)
-	widget_list = Array.new
+def generate_question_widget_list(w,question_queue)
+#	widget_list = Array.new
 	question_queue.each do |question_item|
 		if question_item.get_optionset.size==0
-			widget_list.push(Question_text_widget.new(question_item.get_name,question_item.get_query_string))
+			w.addwidget_to_wstack(Question_text_widget.new(question_item.get_name,question_item.get_query_string))
 		else
-			widget_list.push(Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset))
+			w.addwidget_to_wstack(Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset))
 		end
 	end
-	return widget_list
+#	return widget_list
 end
 
-def 
 
 =begin
 ##########################

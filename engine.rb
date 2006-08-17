@@ -7,7 +7,7 @@ require 'gui_lib.rb'
 	Question.create_text_question("sample","Test Query")
 	a = Qt::Application.new(ARGV)
 	w = FrmMain.new
-	generate_question_widget(w,Question.get_question_queue)
+	generate_question_widget_list(w,Question.get_question_queue)
 	w.repaint()
 	a.mainWidget = w
 	w.show
