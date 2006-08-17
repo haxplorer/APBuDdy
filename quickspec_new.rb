@@ -1,0 +1,202 @@
+# Form implementation generated from reading ui file 'quickspec_new.ui'
+#
+# Created: Wed Aug 16 08:25:53 2006
+#      by: The QtRuby User Interface Compiler (rbuic)
+#
+# WARNING! All changes made in this file will be lost!!
+
+
+require 'Qt'
+
+class FrmMain < Qt::MainWindow
+
+    slots 'languageChange()',
+    'fileExit()',
+    'helpIndex()',
+    'helpContents()',
+    'helpAbout()',
+    'extrasSavePoints()',
+    'goBack()',
+    'goNext()',
+    'selectFile()',
+    'fileStartAgain()',
+    'fileImportTemplate()'
+
+    attr_reader :txtprocessoutput
+    attr_reader :btnBack
+    attr_reader :btnNext
+    attr_reader :btnQuit
+    attr_reader :wstackMain
+    attr_reader :wspMain
+
+
+    def initialize(parent = nil, name = nil, fl = WType_TopLevel)
+        super
+
+        statusBar()
+        if name.nil?
+        	setName("FrmMain")
+        end
+
+        setCentralWidget(Qt::Widget.new(self, "qt_central_widget"))
+
+        @txtprocessoutput = Qt::TextEdit.new(centralWidget(), "txtprocessoutput")
+        @txtprocessoutput.setEnabled( false )
+        @txtprocessoutput.setGeometry( Qt::Rect.new(30, 360, 491, 102) )
+
+        @btnBack = Qt::PushButton.new(centralWidget(), "btnBack")
+        @btnBack.setGeometry( Qt::Rect.new(180, 470, 81, 30) )
+
+        @btnNext = Qt::PushButton.new(centralWidget(), "btnNext")
+        @btnNext.setGeometry( Qt::Rect.new(280, 470, 81, 30) )
+
+        @btnQuit = Qt::PushButton.new(centralWidget(), "btnQuit")
+        @btnQuit.setGeometry( Qt::Rect.new(420, 470, 81, 30) )
+
+        @wstackMain = Qt::WidgetStack.new(centralWidget(), "wstackMain")
+        @wstackMain.setGeometry( Qt::Rect.new(30, 30, 490, 320) )
+
+        @wspMain = Qt::Widget.new(@wstackMain, "wspMain")
+        @wstackMain.addWidget( @wspMain, 0 )
+
+        @fileExitAction= Qt::Action.new(self, "fileExitAction")
+        @helpContentsAction= Qt::Action.new(self, "helpContentsAction")
+        @helpIndexAction= Qt::Action.new(self, "helpIndexAction")
+        @helpAboutAction= Qt::Action.new(self, "helpAboutAction")
+        @fileNewImport_templateAction= Qt::Action.new(self, "fileNewImport_templateAction")
+        @extrasSavePointsAction= Qt::Action.new(self, "extrasSavePointsAction")
+        @fileStart_AgainAction= Qt::Action.new(self, "fileStart_AgainAction")
+
+
+
+
+        @MenuBar = Qt::MenuBar.new( self, "MenuBar" )
+
+
+        @fileMenu = Qt::PopupMenu.new( self )
+        @fileStart_AgainAction.addTo( @fileMenu )
+        @fileNewImport_templateAction.addTo( @fileMenu )
+        @fileMenu.insertSeparator()
+        @fileMenu.insertSeparator()
+        @fileExitAction.addTo( @fileMenu )
+        @MenuBar.insertItem( "", @fileMenu, 1 )
+
+        @Extras = Qt::PopupMenu.new( self )
+        @extrasSavePointsAction.addTo( @Extras )
+        @MenuBar.insertItem( "", @Extras, 2 )
+
+        @helpMenu = Qt::PopupMenu.new( self )
+        @helpContentsAction.addTo( @helpMenu )
+        @helpIndexAction.addTo( @helpMenu )
+        @helpMenu.insertSeparator()
+        @helpAboutAction.addTo( @helpMenu )
+        @MenuBar.insertItem( "", @helpMenu, 3 )
+
+        languageChange()
+        resize( Qt::Size.new(550, 576).expandedTo(minimumSizeHint()) )
+        clearWState( WState_Polished )
+
+        Qt::Object.connect(@fileExitAction, SIGNAL("activated()"), self, SLOT("fileExit()") )
+        Qt::Object.connect(@helpIndexAction, SIGNAL("activated()"), self, SLOT("helpIndex()") )
+        Qt::Object.connect(@helpContentsAction, SIGNAL("activated()"), self, SLOT("helpContents()") )
+        Qt::Object.connect(@helpAboutAction, SIGNAL("activated()"), self, SLOT("helpAbout()") )
+        Qt::Object.connect(@btnQuit, SIGNAL("clicked()"), self, SLOT("close()") )
+        Qt::Object.connect(@extrasSavePointsAction, SIGNAL("activated()"), self, SLOT("extrasSavePoints()") )
+        Qt::Object.connect(@btnBack, SIGNAL("clicked()"), self, SLOT("goBack()") )
+        Qt::Object.connect(@btnNext, SIGNAL("clicked()"), self, SLOT("goNext()") )
+        Qt::Object.connect(@fileStart_AgainAction, SIGNAL("activated()"), self, SLOT("fileStartAgain()") )
+        Qt::Object.connect(@fileNewImport_templateAction, SIGNAL("activated()"), self, SLOT("fileImportTemplate()") )
+
+        setTabOrder(@btnBack, @btnNext)
+        setTabOrder(@btnNext, @btnQuit)
+        setTabOrder(@btnQuit, @txtprocessoutput)
+    end
+
+    #
+    #  Sets the strings of the subwidgets using the current
+    #  language.
+    #
+    def languageChange()
+        setCaption(trUtf8("Quickspec"))
+        @btnBack.setText( trUtf8("Bac&k") )
+        @btnBack.setAccel( Qt::KeySequence.new(trUtf8("Alt+K")) )
+        @btnNext.setText( trUtf8("Ne&xt") )
+        @btnNext.setAccel( Qt::KeySequence.new(trUtf8("Alt+X")) )
+        @btnQuit.setText( trUtf8("&Quit") )
+        @btnQuit.setAccel( Qt::KeySequence.new(trUtf8("Alt+Q")) )
+        @fileExitAction.setText(trUtf8("E&xit"))
+        @fileExitAction.setMenuText(trUtf8("E&xit"))
+        @fileExitAction.setAccel(Qt::KeySequence.new(nil))
+        @helpContentsAction.setText(trUtf8("Contents"))
+        @helpContentsAction.setMenuText(trUtf8("&Contents..."))
+        @helpContentsAction.setAccel(Qt::KeySequence.new(nil))
+        @helpIndexAction.setText(trUtf8("Index"))
+        @helpIndexAction.setMenuText(trUtf8("&Index..."))
+        @helpIndexAction.setAccel(Qt::KeySequence.new(nil))
+        @helpAboutAction.setText(trUtf8("About"))
+        @helpAboutAction.setMenuText(trUtf8("&About"))
+        @helpAboutAction.setAccel(Qt::KeySequence.new(nil))
+        @fileNewImport_templateAction.setText(trUtf8("From &Template"))
+        @fileNewImport_templateAction.setMenuText(trUtf8("From &Template"))
+        @fileNewImport_templateAction.setAccel(Qt::KeySequence.new(nil))
+        @extrasSavePointsAction.setText(trUtf8("SavePoints"))
+        @extrasSavePointsAction.setMenuText(trUtf8("SavePoints"))
+        @fileStart_AgainAction.setText(trUtf8("&Start Again"))
+        @fileStart_AgainAction.setMenuText(trUtf8("&Start Again"))
+        if !@MenuBar.findItem(1).nil?
+                @MenuBar.findItem(1).setText( trUtf8("&File") )
+        end
+        if !@MenuBar.findItem(2).nil?
+                @MenuBar.findItem(2).setText( trUtf8("Extras") )
+        end
+        if !@MenuBar.findItem(3).nil?
+                @MenuBar.findItem(3).setText( trUtf8("&Help") )
+        end
+    end
+    protected :languageChange
+
+    def fileExit(*k)
+        print("FrmMain.fileExit(): Not implemented yet.\n")
+    end
+    
+    def addwidget_to_wstack(widget)
+	wstackMain.addWidget(widget,0)
+    end
+
+    def helpIndex(*k)
+        print("FrmMain.helpIndex(): Not implemented yet.\n")
+    end
+
+    def helpContents(*k)
+        print("FrmMain.helpContents(): Not implemented yet.\n")
+    end
+
+    def helpAbout(*k)
+        print("FrmMain.helpAbout(): Not implemented yet.\n")
+    end
+
+    def extrasSavePoints(*k)
+        print("FrmMain.extrasSavePoints(): Not implemented yet.\n")
+    end
+
+    def goBack(*k)
+        print("FrmMain.goBack(): Not implemented yet.\n")
+    end
+
+    def goNext(*k)
+        print("FrmMain.goNext(): Not implemented yet.\n")
+    end
+
+    def selectFile(*k)
+        print("FrmMain.selectFile(): Not implemented yet.\n")
+    end
+
+    def fileStartAgain(*k)
+        print("FrmMain.fileStartAgain(): Not implemented yet.\n")
+    end
+
+    def fileImportTemplate(*k)
+        print("FrmMain.fileImportTemplate(): Not implemented yet.\n")
+    end
+
+end
