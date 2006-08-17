@@ -1,5 +1,6 @@
 require 'Qt'
 require 'Classes.rb'
+require 'quickspec_new.rb'
 
 class Question_options_widget < Qt::Widget
 	
@@ -29,16 +30,19 @@ class Question_text_widget < Qt::Widget
 	end
 end
 
-def generate_question_widget(question_queue)
+def generate_question_widget_list(question_queue)
+	widget_list = Array.new
 	question_queue.each do |question_item|
 		if question_item.get_optionset.size==0
-			wstackMain.addWidget(Question_text_widget.new(question_item.get_name,question_item.get_query_string),1)
+			widget_list.push(Question_text_widget.new(question_item.get_name,question_item.get_query_string))
 		else
-			wstackMain.addWidget(Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset),1)
+			widget_list.push(Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset))
 		end
 	end
-
+	return widget_list
 end
+
+def 
 
 =begin
 ##########################

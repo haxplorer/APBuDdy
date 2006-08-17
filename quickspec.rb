@@ -411,11 +411,13 @@ class FrmMain < Qt::MainWindow
 
 end
 
-if $0 == __FILE__
+
+=begin
+#if $0 == __FILE__
     a = Qt::Application.new(ARGV)
     w = FrmMain.new
     a.mainWidget = w
     w.show
     a.exec
-end
-
+#end
+=end

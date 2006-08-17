@@ -101,6 +101,7 @@ end
 
 
 #A Class to represent something like if optionX for questionA is true, optionY for questionB should gain N credits
+#Currently not being used!!
 class Association
 	def initialize(local_response,remote_question,remote_response,credit_modifier)
 		@local_response = local_response
@@ -203,4 +204,8 @@ class Sysvars
 	def Sysvars.get_rpm_build_root
 		return @@rpm_build_root
 	end
+end
+
+class Packagingvars
+	
 end
