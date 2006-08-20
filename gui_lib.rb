@@ -1,12 +1,12 @@
 require 'Qt'
 require 'Classes.rb'
-require 'quickspec_new.rb'
 
 class Question_options_widget < Qt::Widget
 	
-	def initialize(name,label,options)
-  		super(nil)
+	def initialize(name,label,options,parent)
+  		super(parent)
 		@hbox = Qt::HBox.new(self)
+		@hbox.setGeometry( Qt::Rect.new(40, 0, 390, 30*(options.size+1)) )
 		@lbl = Qt::Label.new(@hbox,label)
 		@lbl.setText(label)
 		@bgrp = Qt::ButtonGroup.new(1,Qt::GroupBox::Horizontal,"Button Group 1 (exclusive)", @hbox)
@@ -21,9 +21,11 @@ class Question_options_widget < Qt::Widget
 end
 
 class Question_text_widget < Qt::Widget
-	def initialize(name,label)
-		super
+	def initialize(name,label,parent)
+		super(parent)
 		@hbox = Qt::HBox.new(self)
+		@hbox.setGeometry( Qt::Rect.new(40, 0, 390, 30) )
+		@hbox.setSpacing(10)
 		@lbl = Qt::Label.new(@hbox,label)
 		@lbl.setText(label)
 		@txt = Qt::LineEdit.new(@hbox,name)
@@ -31,17 +33,15 @@ class Question_text_widget < Qt::Widget
 end
 
 def generate_question_widget_list(w,question_queue)
-#	widget_list = Array.new
 	question_queue.each do |question_item|
 		if question_item.get_optionset.size==0
-			w.addwidget_to_wstack(Question_text_widget.new(question_item.get_name,question_item.get_query_string))
+			w.addwidget_to_frm(Question_text_widget.new(question_item.get_name,question_item.get_query_string,w.get_vboxMain))
 		else
-			w.addwidget_to_wstack(Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset))
+			w.addwidget_to_frm(Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset,w.get_vboxMain))
 		end
 	end
-#	return widget_list
-end
 
+end
 
 =begin
 ##########################

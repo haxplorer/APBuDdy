@@ -1,12 +1,16 @@
 # Form implementation generated from reading ui file 'quickspec_new.ui'
 #
-# Created: Wed Aug 16 08:25:53 2006
+# Created: Sun Aug 20 01:39:41 2006
 #      by: The QtRuby User Interface Compiler (rbuic)
 #
-# WARNING! All changes made in this file will be lost!!
+# WARNING! All changes made in this file will be lost!
 
 
 require 'Qt'
+require 'gui_lib.rb'
+require 'Classes.rb'
+
+
 
 class FrmMain < Qt::MainWindow
 
@@ -22,12 +26,11 @@ class FrmMain < Qt::MainWindow
     'fileStartAgain()',
     'fileImportTemplate()'
 
-    attr_reader :txtprocessoutput
     attr_reader :btnBack
     attr_reader :btnNext
+    attr_reader :txtprocessoutput
     attr_reader :btnQuit
-    attr_reader :wstackMain
-    attr_reader :wspMain
+    attr_reader :frmMain
 
 
     def initialize(parent = nil, name = nil, fl = WType_TopLevel)
@@ -40,24 +43,26 @@ class FrmMain < Qt::MainWindow
 
         setCentralWidget(Qt::Widget.new(self, "qt_central_widget"))
 
-        @txtprocessoutput = Qt::TextEdit.new(centralWidget(), "txtprocessoutput")
-        @txtprocessoutput.setEnabled( false )
-        @txtprocessoutput.setGeometry( Qt::Rect.new(30, 360, 491, 102) )
-
         @btnBack = Qt::PushButton.new(centralWidget(), "btnBack")
         @btnBack.setGeometry( Qt::Rect.new(180, 470, 81, 30) )
 
         @btnNext = Qt::PushButton.new(centralWidget(), "btnNext")
         @btnNext.setGeometry( Qt::Rect.new(280, 470, 81, 30) )
 
+        @txtprocessoutput = Qt::TextEdit.new(centralWidget(), "txtprocessoutput")
+        @txtprocessoutput.setEnabled( false )
+        @txtprocessoutput.setGeometry( Qt::Rect.new(21, 360, 500, 102) )
+
         @btnQuit = Qt::PushButton.new(centralWidget(), "btnQuit")
         @btnQuit.setGeometry( Qt::Rect.new(420, 470, 81, 30) )
 
-        @wstackMain = Qt::WidgetStack.new(centralWidget(), "wstackMain")
-        @wstackMain.setGeometry( Qt::Rect.new(30, 30, 490, 320) )
+        @frmMain = Qt::Frame.new(centralWidget(), "frmMain")
+        @frmMain.setGeometry( Qt::Rect.new(20, 25, 490, 310) )
+        @frmMain.setFrameShape( Qt::Frame::GroupBoxPanel )
+        @frmMain.setFrameShadow( Qt::Frame::Raised )
 
-        @wspMain = Qt::Widget.new(@wstackMain, "wspMain")
-        @wstackMain.addWidget( @wspMain, 0 )
+        @vboxMain = Qt::VBoxLayout.new(@frmMain,0,1,"vboxMain")
+	
 
         @fileExitAction= Qt::Action.new(self, "fileExitAction")
         @helpContentsAction= Qt::Action.new(self, "helpContentsAction")
@@ -66,8 +71,6 @@ class FrmMain < Qt::MainWindow
         @fileNewImport_templateAction= Qt::Action.new(self, "fileNewImport_templateAction")
         @extrasSavePointsAction= Qt::Action.new(self, "extrasSavePointsAction")
         @fileStart_AgainAction= Qt::Action.new(self, "fileStart_AgainAction")
-
-
 
 
         @MenuBar = Qt::MenuBar.new( self, "MenuBar" )
@@ -93,7 +96,7 @@ class FrmMain < Qt::MainWindow
         @MenuBar.insertItem( "", @helpMenu, 3 )
 
         languageChange()
-        resize( Qt::Size.new(550, 576).expandedTo(minimumSizeHint()) )
+        resize( Qt::Size.new(540, 576).expandedTo(minimumSizeHint()) )
         clearWState( WState_Polished )
 
         Qt::Object.connect(@fileExitAction, SIGNAL("activated()"), self, SLOT("fileExit()") )
@@ -155,12 +158,9 @@ class FrmMain < Qt::MainWindow
     end
     protected :languageChange
 
+
     def fileExit(*k)
         print("FrmMain.fileExit(): Not implemented yet.\n")
-    end
-    
-    def addwidget_to_wstack(widget)
-	wstackMain.addWidget(widget,0)
     end
 
     def helpIndex(*k)
@@ -199,4 +199,26 @@ class FrmMain < Qt::MainWindow
         print("FrmMain.fileImportTemplate(): Not implemented yet.\n")
     end
 
+    def addwidget_to_frm(widget)
+        @vboxMain.addWidget(widget)
+        puts widget.parentWidget
+        widget.show
+    end
+
+    def get_vboxMain()
+        puts "frame #{@frmMain}"
+        return @frmMain
+    end
+
+
 end
+
+=begin
+if $0 == __FILE__
+    a = Qt::Application.new(ARGV)
+    w = FrmMain.new
+    a.mainWidget = w
+    w.show
+    a.exec
+end
+=end

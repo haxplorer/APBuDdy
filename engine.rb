@@ -8,7 +8,6 @@ require 'gui_lib.rb'
 	a = Qt::Application.new(ARGV)
 	w = FrmMain.new
 	generate_question_widget_list(w,Question.get_question_queue)
-	w.repaint()
 	a.mainWidget = w
 	w.show
 	a.exec
