@@ -32,13 +32,20 @@ when 1
 	Question.get_question_byname("section").setask
 	generate_question_widget_list(w,Question.get_question_queue)
 when 2
+	Question.get_question_byname("maintainer").setask
+	Question.get_question_byname("summary").setask
+	Question.get_question_byname("description").setask
+	generate_question_widget_list(w,Question.get_question_queue)
+when 3
 	Question.get_question_byname("buildroot").setask(Sysvars.get_rpm_build_root)
 	Question.get_question_byname("configure_args").setask
         generate_question_widget_list(w,Question.get_question_queue)
 	w.proc_outbox_append("Trying to configure... Please Wait..")
-when 3
+when 4
 	Phase.phase_queue_concat(gnu_configure_check_create)
 	Phase.run_phase_queue
+	w.proc_outbox_append("Writing out Abstract Package Build Description")
+	xml_writeout
 	w.proc_outbox_append("Job Done.. You may Quit now")
 end
 end

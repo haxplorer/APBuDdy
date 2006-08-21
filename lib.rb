@@ -1,9 +1,10 @@
+require 'rubygems'
+require 'xml/libxml'
+require 'Classes.rb'
 
 
 def parse_distro_name_from_release(filename)
-
 	return File.new(filename,"r").gets.split(" ")[0]
-
 end
 
 def get_homedir()
@@ -158,4 +159,70 @@ def file_get_unpack
                 else
                         return 0
                 end
+end
+
+def xml_writeout
+	doc = XML::Document.new()
+	doc.root = XML::Node.new('CommonDescription')
+	root = doc.root
+	root << header = XML::Node.new('Header')
+	header << package = XML::Node.new('Package')
+	package['Name'] = Pkgvars.get_pkg_name
+	package << version = XML::Node.new('Version')
+	version['value'] = Pkgvars.get_version
+	version << release = XML::Node.new('Release')
+	release << Pkgvars.get_release
+	version << group = XML::Node.new('Group')
+	group << Pkgvars.get_group
+	version << priority = XML::Node.new('Priority')
+	version << arch = XML::Node.new('Architecture')
+	arch << Pkgvars.get_arch
+	version << depends = XML::Node.new('Depends')
+	version << suggests = XML::Node.new('Suggests')
+	version << conflicts = XML::Node.new('Conflicts')
+	version << buildroot = XML::Node.new('BuildRoot')
+	buildroot << Pkgvars.get_buildroot
+	version << patches = XML::Node.new('Patches')
+	version << vendor = XML::Node.new('Vendor')
+	version << splitrule = XML::Node.new('Splitrule')
+	version << section = XML::Node.new('Section')
+	section << Pkgvars.get_section
+	header << sources = XML::Node.new('Sources')
+	sources << source = XML::Node.new('Source')
+	source << Pkgvars.get_src_path
+	header << maintainer = XML::Node.new('Maintainer')
+	maintainer << Pkgvars.get_maintainer
+	header << license = XML::Node.new('License')
+	license << Pkgvars.get_license
+	header << summary = XML::Node.new('Summary')
+	summary << Pkgvars.get_summary
+	header << description = XML::Node.new('Description')
+	description << Pkgvars.get_description
+	
+	root << prep = XML::Node.new('Prep')
+	prep << setup = XML::Node.new('Setup')
+	prep << patch = XML::Node.new('Patch')
+	
+	root << build = XML::Node.new('Build')
+	build << configure_flags = XML::Node.new('configure-flags')
+	configure_flags << Pkgvars.get_extra_configure_args
+
+	root << install = XML::Node.new('Install')
+	install << install_target = XML::Node.new('install-target')
+	
+	root << post = XML::Node.new('Post')
+	post << post_calls = XML::Node.new('Post-calls')
+	
+	root << clean = XML::Node.new('Clean')
+
+	root << files = XML::Node.new('Files')
+
+	root << changelog = XML::Node.new('Changelog')
+	changelog << date = XML::Node.new('Date')
+	changelog << name = XML::Node.new('Name')
+	changelog << email = XML::Node.new('email')
+	changelog << changes = XML::Node.new('Changes')
+	
+	format = true
+	doc.save("#{Pkgvars.get_pkg_name}.xml", format)
 end

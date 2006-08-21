@@ -14,8 +14,11 @@ def generate_predefined_questions
 	Question.create_text_question("depends","Depends")
 	Question.create_multiple_choice("arch","Architecture",["i386","i686","ppc"])
 	Question.create_text_question("vendor","Vendor")
+	Question.create_text_question("maintainer","Maintainer")
 	Question.create_text_question("changelog","Changelog")
 	Question.create_text_question("section","Section")
+	Question.create_text_question("summary","Summary")
+	Question.create_text_question("description","Description")
 end
 
 

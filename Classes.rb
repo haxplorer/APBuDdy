@@ -257,6 +257,9 @@ class Pkgvars
 	@@extra_configure_args = String.new
 	@@make_args = String.new
 	@@install_args = String.new
+	@@maintainer = String.new
+	@@summary = String.new
+	@@Description = String.new
 
 	def Pkgvars.set_var(var_name,value)
 		case var_name
@@ -288,6 +291,12 @@ class Pkgvars
 			@@make_args = value
 			when "install_args"
 			@@install_args = value
+			when "maintainer"
+			@@maintainer = value
+			when "summary"
+			@@summary = value
+			when "description"
+			@@description = value
 		end
 	end
 	
@@ -346,4 +355,14 @@ class Pkgvars
 	def Pkgvars.get_install_args
 		return @@install_args
 	end
+	def Pkgvars.get_maintainer
+                return @@maintainer
+        end
+        def Pkgvars.get_summary
+                return @@summary
+        end
+        def Pkgvars.get_description
+                return @@description
+        end
+
 end
