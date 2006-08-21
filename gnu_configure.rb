@@ -1,33 +1,7 @@
-############################################################################
-#    Copyright (C) 2006 by Rajagopal N   #
-#    rajagopal.developer@gmail.com   #
-#                                                                          #
-#    This program is free software; you can redistribute it and#or modify  #
-#    it under the terms of the GNU General Public License as published by  #
-#    the Free Software Foundation; either version 2 of the License, or     #
-#    (at your option) any later version.                                   #
-#                                                                          #
-#    This program is distributed in the hope that it will be useful,       #
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of        #
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
-#    GNU General Public License for more details.                          #
-#                                                                          #
-#    You should have received a copy of the GNU General Public License     #
-#    along with this program; if not, write to the                         #
-#    Free Software Foundation, Inc.,                                       #
-#    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
-############################################################################
-
 #!/usr/bin/env ruby
 
 require "Classes.rb"
 
-def guess_configure_args()
-return ""
-end
-def get_extra_configure_args()
-return ""
-end
 
 
 
@@ -44,11 +18,9 @@ def gnu_configure_check_create()
 		end
 	end
 	configure_queue = Array.new
-	configure_args = guess_configure_args()
-	extra_configure_args = get_extra_configure_args()
-	configure_queue.push(generate_configure_phase(configure_args,extra_configure_args))
-	configure_queue.push(generate_make_phase(""))
-	configure_queue.push(generate_install_phase(""))
+	configure_queue.push(generate_configure_phase(Pkgvars.get_configure_args,Pkgvars.get_extra_configure_args))
+	configure_queue.push(generate_make_phase(Pkgvars.get_make_args))
+	configure_queue.push(generate_install_phase(Pkgvars.get_install_args))
 	return configure_queue
 end
 
@@ -56,24 +28,18 @@ end
 #Does not take care to evaluate the presence of configure.
 #The calling function must call it in a suitable way based on the credits.
 def generate_configure_phase(configure_args,extra_configure_args)
-#	configure_phase = Phase.phase_empty("gnu_configure")
-#	configure_phase.steps = "./configure \\"
 	steps = "./configure \\"
 	configure_args.each_with_index do |arg,i| 
 		if (i!=(arg.size-1)||extra_configure_args.size!=0)
-#			configure_phase.steps.concat("#{arg} \\")
 			steps.concat("#{arg} \\")
 		else
-#			configure_phase.steps.concat(arg)
 			steps.concat(arg)
 		end
 	end
         extra_configure_args.each_with_index do |arg,i| 
 		if (i!=(arg.size-1))
-#			configure_phase.steps.concat("#{arg} \\")
 			steps.concat("#{arg} \\")
                 else
-#			configure_phase.steps.concat(arg)
 			steps.concat(arg)
                 end
         end
@@ -85,11 +51,8 @@ end
 #Does not take care to evaluate the presence of make.
 #The calling function must call it in a suitable way based on the credits.
 def generate_make_phase(make_args)
-#	make_phase = Phase.phase_empty(gnu_make)
-#	make_phase.steps = "./make "
 	steps = "make "
 	make_args.each_with_index do |arg,i| 
-#		make_phase.steps.concat("#{arg} ")
 		steps.concat("#{arg} ")
 	end
 	make_phase = Phase.new("gnu_make",steps)
@@ -100,16 +63,11 @@ end
 #Does not take care to evaluate the presence of install.
 #The calling function must call it in a suitable way based on the credits.
 def generate_install_phase(install_args)
-#	install_phase = Phase.phase_empty(gnu_install)
-#	install_phase.steps = "./make "
 	steps = "make "
         install_args.each_with_index do |arg,i| 
-#		install_phase.steps.concat("#{arg} ")
 		steps.concat("#{arg} ")
         end
-#	install_phase.steps.concat("DESTDIR=$RPM_BUILD_ROOT")
 	steps.concat("DESTDIR=#{Sysvars.get_rpm_build_root} ")
-#	install_phase.steps.concat("install")
 	steps.concat("install")
 	install_phase = Phase.new("gnu_install",steps)
         return install_phase

@@ -1,22 +1,3 @@
-############################################################################
-#    Copyright (C) 2006 by Rajagopal N   #
-#    rajagopal.developer@gmail.com   #
-#                                                                          #
-#    This program is free software; you can redistribute it and#or modify  #
-#    it under the terms of the GNU General Public License as published by  #
-#    the Free Software Foundation; either version 2 of the License, or     #
-#    (at your option) any later version.                                   #
-#                                                                          #
-#    This program is distributed in the hope that it will be useful,       #
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of        #
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
-#    GNU General Public License for more details.                          #
-#                                                                          #
-#    You should have received a copy of the GNU General Public License     #
-#    along with this program; if not, write to the                         #
-#    Free Software Foundation, Inc.,                                       #
-#    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
-############################################################################
 
 
 def parse_distro_name_from_release(filename)
@@ -88,8 +69,9 @@ def get_package_name(package_path)
 end
 
 
-def get_version(package_path)
+def get_version
 
+	package_path = Pkgvars.get_src_path
 	version = ""
 	package_path.split("/")[package_path.split("/").size-1].split("-").each do |part|
 	if part.to_f!=0.0
@@ -101,18 +83,18 @@ def get_version(package_path)
 end
 
 
-def find_license_type(sourcedir)
+def find_license_type
 
-if FileTest.exist?("#{sourcedir}/COPYING")
-	license_file = File.new("#{sourcedir}/COPYING")
-elsif FileTest.exist?("#{sourcedir}/copying")
-        license_file = File.new("#{sourcedir}/copying")
-elsif FileTest.exist?("#{sourcedir}/LICENSE")
-        license_file = File.new("#{sourcedir}/LICENSE")
-elsif FileTest.exist?("#{sourcedir}/MIT-LICENSE")
+if FileTest.exist?("#{Sysvars.get_extracted_dir}/COPYING")
+	license_file = File.new("#{Sysvars.get_extracted_dir}/COPYING")
+elsif FileTest.exist?("#{Sysvars.get_extracted_dir}/copying")
+        license_file = File.new("#{Sysvars.get_extracted_dir}/copying")
+elsif FileTest.exist?("#{Sysvars.get_extracted_dir}/LICENSE")
+        license_file = File.new("#{Sysvars.get_extracted_dir}/LICENSE")
+elsif FileTest.exist?("#{Sysvars.get_extracted_dir}/MIT-LICENSE")
 	return "MIT"
 else
-	return "Enter Manually!!"
+	return "Other"
 end
 
 license_content = File.read(license_file)
@@ -131,19 +113,19 @@ end
 
 
 def get_sourcedir()
-	if (FileTest.exist?("$HOME/.quickspec") && FileTest.directory?("$HOME/.quickspec"))
-		if FileTest.exist?("$HOME/.quickspec/SOURCES")
-			return "$HOME/.quickspec/SOURCES"
+	if (FileTest.exist?("$HOME/.apbd") && FileTest.directory?("$HOME/.apbd"))
+		if FileTest.exist?("$HOME/.apbd/SOURCES")
+			return "$HOME/.apbd/SOURCES"
 		else
-			system("mkdir $HOME/.quickspec/SOURCES")
+			system("mkdir $HOME/.apbd/SOURCES")
 		end
-	elsif FileTest.exist?("$HOME/.quickspec") && !FileTest.directory?("$HOME/.quickspec")
-		system("rm $HOME/.quickspec")
-		system("mkdir $HOME/.quickspec $HOME/.quickspec/SOURCES")
-		return "$HOME/.quickspec/SOURCES"
+	elsif FileTest.exist?("$HOME/.apbd") && !FileTest.directory?("$HOME/.apbd")
+		system("rm $HOME/.apbd")
+		system("mkdir $HOME/.apbd $HOME/.apbd/SOURCES")
+		return "$HOME/.apbd/SOURCES"
 	else
-		system("mkdir $HOME/.quickspec $HOME/.quickspec/SOURCES")
-		return "$HOME/.quickspec/SOURCES"
+		system("mkdir $HOME/.apbd $HOME/.apbd/SOURCES")
+		return "$HOME/.apbd/SOURCES"
 	end
 end
 
@@ -163,14 +145,17 @@ def unpack(filename)
 		system("mkdir #{name.split(".")[0]}; cd #{name.split(".")[0]}")
 	end
 	system("cd #{sourcedir};tar -x#{arg}vf #{filename} >/tmp/#{name}.qsx")
+	Sysvars.set_extracted_dir(`cat /tmp/imlib2-1.2.2.tar.gz.qst | awk -F '/' '{print $1}' | uniq`.chomp)
 end
 
-
-def get_question_byname(name)
-	Question.get_question_queue.each do |question_item|
-		if question_item.get_name==name
-			return question_item
-		end
-	end
-	return nil
+def file_get_unpack
+		package_path = "#{get_homedir()}/.apbd/PACKAGES/#{File.basename(Pkgvars.get_src_path)}"
+                if FileTest.exist?(Pkgvars.get_src_path)
+                        unpack(Pkgvars.get_src_path)
+                elsif Pkgvars.get_src_path.split("://")[0]=="http" || Pkgvars.get_src_path.split("://")[0]=="ftp"
+			system("wget #{Pkgvars.get_src_path}")
+                        unpack(package_path)
+                else
+                        return 0
+                end
 end

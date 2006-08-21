@@ -1,23 +1,3 @@
-############################################################################
-#    Copyright (C) 2006 by Rajagopal N   #
-#    rajagopal.developer@gmail.com   #
-#                                                                          #
-#    This program is free software; you can redistribute it and#or modify  #
-#    it under the terms of the GNU General Public License as published by  #
-#    the Free Software Foundation; either version 2 of the License, or     #
-#    (at your option) any later version.                                   #
-#                                                                          #
-#    This program is distributed in the hope that it will be useful,       #
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of        #
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
-#    GNU General Public License for more details.                          #
-#                                                                          #
-#    You should have received a copy of the GNU General Public License     #
-#    along with this program; if not, write to the                         #
-#    Free Software Foundation, Inc.,                                       #
-#    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
-############################################################################
-
 #!/usr/bin/env ruby
 
 #A class to represent each of the different phases in the program
@@ -50,6 +30,12 @@ class Phase
                         end
                 end
                 @@phase_queue.insert(pos,temp_phase)
+	end
+	def Phase.run_phase_queue
+                @@phase_queue.each do |phase_item|
+                        puts phase_item.get_steps
+                        system("cd #{Sysvars.get_extracted_dir};#{phase_item.get_steps}")
+                end
 	end
 	def Phase.phase_queue_concat(ext_queue)
 		@@phase_queue.concat(ext_queue)
@@ -116,8 +102,10 @@ end
 #The name field is to be used as an id and it is suggested to use the required variable's name as the name
 class Question
 	@@question_queue = Array.new
+	@@asked_list = Array.new
 	#use this to create an objective question
 	def initialize(name,query_string,options,credits=[])
+		@name = name
 		@query_string = query_string
 		@optionset = Array.new
 		options.each_with_index do |option_item,i|
@@ -131,6 +119,10 @@ class Question
 		@status = "created"
 		@@question_queue.push(self)
 	end
+	#A wrapper to have uniform constructor names
+	def Question.create_multiple_choice(name,query_string,options,credits=[])
+		new(name,query_string,options,credits)
+	end
 	#use this to create an yes/no type question
 	def Question.create_yes_no(name,query_string)
 		options=["yes","no"]
@@ -143,12 +135,42 @@ class Question
 	def Question.get_question_queue
 		return @@question_queue
 	end
+	def Question.get_question_byname(name)
+		@@question_queue.each do |question_item|
+			if question_item.get_name==name
+				return question_item
+			end
+		end
+		return nil
+	end
+	def Question.get_asked_list
+		return @@asked_list
+	end
+	def Question.commit_all_asked
+		@@asked_list.each do |asked_item|
+			Question.get_question_byname(asked_item.get_name).commit(asked_item.get_answer)
+			Pkgvars.set_var(asked_item.get_name,asked_item.get_answer)
+		end
+	end
+	def Question.clear_asked_list
+		@@asked_list.clear
+	end
+	def setask(answer=nil)
+		if(answer!=nil)
+			@choice_selected=answer
+		end
+		@status = "ask"
+	end
 	def answered(option_selected)
 		@status = "answered"
 		@choice_selected = option_selected
 	end
-	def commit
+	def commit(option_selected)
 		@status = "committed"
+		@choice_selected = option_selected
+	end
+	def unask
+		@status = "created"
 	end
 	def get_optionset
 		return @optionset
@@ -158,6 +180,12 @@ class Question
 	end
 	def get_name
 		return @name
+	end
+	def get_status
+		return @status
+	end
+	def get_answer
+		return @choice_selected
 	end
 	#Add a new Association to the association_list of the Question
 	def add_association(local_response,remote_question,remote_response,credit_modifier)
@@ -191,21 +219,131 @@ end
 
 class Sysvars
 	@@rpm_build_root="/tmp/tmproot"
-	@@source_dir=String.new
+	@@source_dir="$HOME/.apbd/SOURCES"
+	@@extracted_dir=String.new
 	def Sysvars.set_source_dir(dir)
 		@@source_dir = dir
 	end
 	def Sysvars.set_rpm_build_root(dir)
 		@@rpm_build_root = dir
 	end
+	def Sysvars.set_extracted_dir(dir)
+                @@extracted_dir = "#{Sysvars.get_source_dir}/#{File.basename(dir)}"
+        end
 	def Sysvars.get_source_dir
 		return @@source_dir
 	end	
 	def Sysvars.get_rpm_build_root
 		return @@rpm_build_root
 	end
+	def Sysvars.get_extracted_dir
+                return @@extracted_dir
+        end
 end
 
-class Packagingvars
+class Pkgvars
+
+	@@pkg_name = String.new
+	@@src_path = String.new
+	@@version = String.new
+	@@release = String.new
+	@@arch = String.new
+	@@license = String.new
+	@@distro = String.new
+	@@group = String.new
+	@@section = String.new
+	@@buildroot = String.new
+	@@configure_args = String.new
+	@@extra_configure_args = String.new
+	@@make_args = String.new
+	@@install_args = String.new
+
+	def Pkgvars.set_var(var_name,value)
+		case var_name
+			when "pkg_name"
+			@@pkg_name = value
+			when "src_path"
+			@@src_path = value
+			when "version"
+			@@version = value
+			when "release"
+			@@release = value
+			when "arch"
+			@@arch = value
+			when "license"
+			@@license = value
+			when "distro"
+			@@distro = value
+			when "group"
+			@@group = value
+			when "section"
+			@@section = value
+			when "buildroot"
+			@@buildroot = value
+			when "configure_args"
+			@@configure_args = value
+			when "extra_configure_args"
+			@@extra_configure_args = value
+			when "make_args"
+			@@make_args = value
+			when "install_args"
+			@@install_args = value
+		end
+	end
 	
+	def Pkgvars.get_pkg_name
+		return @@pkg_name
+	end
+	
+	def Pkgvars.get_src_path
+		return @@src_path
+	end
+	
+	def Pkgvars.get_version
+		return @@version
+	end
+
+	def Pkgvars.get_release
+		return @@release
+	end
+
+	def Pkgvars.get_arch
+		return @@arch
+	end
+	
+	def Pkgvars.get_license
+		return @@license
+	end
+	
+	def Pkgvars.get_distro
+		return @@distro
+	end
+	
+	def Pkgvars.get_group
+		return @@group
+	end
+	
+	def Pkgvars.get_section
+		return @@section
+	end
+
+	def Pkgvars.get_buildroot
+		return @@buildroot
+	end
+
+	def Pkgvars.get_configure_args
+		return @@configure_args
+	end
+
+	def Pkgvars.get_extra_configure_args
+		return @@extra_configure_args
+	end
+
+	def Pkgvars.get_make_args
+		return @@make_args
+	end
+
+	def Pkgvars.get_install_args
+		return @@install_args
+	end
 end

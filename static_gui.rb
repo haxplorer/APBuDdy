@@ -33,6 +33,7 @@ class FrmMain < Qt::MainWindow
     attr_reader :frmMain
 
 
+
     def initialize(parent = nil, name = nil, fl = WType_TopLevel)
         super
 
@@ -42,6 +43,8 @@ class FrmMain < Qt::MainWindow
         end
 
         setCentralWidget(Qt::Widget.new(self, "qt_central_widget"))
+	
+	@engine_count = 0
 
         @btnBack = Qt::PushButton.new(centralWidget(), "btnBack")
         @btnBack.setGeometry( Qt::Rect.new(180, 470, 81, 30) )
@@ -61,7 +64,7 @@ class FrmMain < Qt::MainWindow
         @frmMain.setFrameShape( Qt::Frame::GroupBoxPanel )
         @frmMain.setFrameShadow( Qt::Frame::Raised )
 
-        @vboxMain = Qt::VBoxLayout.new(@frmMain,0,1,"vboxMain")
+        @vboxMain = Qt::VBoxLayout.new(@frmMain,0,-1,"vboxMain")
 	
 
         @fileExitAction= Qt::Action.new(self, "fileExitAction")
@@ -180,11 +183,26 @@ class FrmMain < Qt::MainWindow
     end
 
     def goBack(*k)
-        print("FrmMain.goBack(): Not implemented yet.\n")
+	clear_vbox
+	Question.get_asked_list.each do |asked_item|
+		Question.get_question_byname(asked_item.get_name).unask
+        end
+	Question.clear_asked_list
+	@engine_count-=1
+	engine(self,@engine_count)
     end
 
     def goNext(*k)
-        print("FrmMain.goNext(): Not implemented yet.\n")
+	Question.commit_all_asked
+	clear_vbox
+	@engine_count+=1
+	engine(self,@engine_count)
+    end
+
+    def clear_vbox
+	Question.get_asked_list.each do |asked_item|
+		@vboxMain.remove(asked_item)
+	end
     end
 
     def selectFile(*k)
@@ -201,13 +219,20 @@ class FrmMain < Qt::MainWindow
 
     def addwidget_to_frm(widget)
         @vboxMain.addWidget(widget)
-        puts widget.parentWidget
+	Question.get_asked_list.push(widget)
         widget.show
     end
 
-    def get_vboxMain()
-        puts "frame #{@frmMain}"
+    def get_main_box
         return @frmMain
+    end
+
+    def get_proc_outbox
+	return @txtprocessoutput
+    end
+
+    def proc_outbox_append(message)
+	@txtprocessoutput.append(message)
     end
 
 
