@@ -1,6 +1,45 @@
 #!/usr/bin/env ruby
 
+require 'lib.rb'
+
+        $hash_guess = Hash.new()
+        $hash_guess["pkg_name"] = proc{dummy}
+        $hash_guess["src_path"] = proc{dummy}
+        $hash_guess["version"] = proc{get_version}
+        $hash_guess["release"] = proc{dummy}
+        $hash_guess["license"] = proc{find_license_type}
+        $hash_guess["group"] = proc{dummy}
+        $hash_guess["buildroot"] = proc{dummy}
+        $hash_guess["configure_args"] = proc{dummy}
+        $hash_guess["distro"] = proc{find_distro}
+        $hash_guess["maintainer"] = proc{dummy}
+        $hash_guess["depends"] = proc{dummy}
+        $hash_guess["arch"] = proc{get_arch}
+        $hash_guess["vendor"] = proc{dummy}
+        $hash_guess["packager_name"] = proc{get_packager_name}
+        $hash_guess["packager_email"] = proc{dummy}
+        $hash_guess["changes"] = proc{get_changes}
+        $hash_guess["section"] = proc{dummy}
+        $hash_guess["summary"] = proc{dummy}
+        $hash_guess["description"] = proc{dummy}
+
+
+
+
 #A class to represent each of the different phases in the program
+class Guess
+        def initialize(answer,credit)
+                @answer = answer
+                @credit = credit
+        end
+        def get_answer
+                return @answer
+        end
+        def get_credit
+                return @credit
+        end
+end
+
 class Phase
 
 	@@phase_queue = Array.new
@@ -33,15 +72,22 @@ class Phase
 	end
 	def Phase.run_phase_queue
                 @@phase_queue.each do |phase_item|
+		if phase_item.get_status==1
                         puts phase_item.get_steps
                         system("cd #{Sysvars.get_extracted_dir};#{phase_item.get_steps}")
+			phase_item.disable
+		end
                 end
+		
 	end
 	def Phase.phase_queue_concat(ext_queue)
 		@@phase_queue.concat(ext_queue)
 	end
 	def Phase.get_phase_queue()
 		return @@phase_queue
+	end
+	def Phase.phase_push(phase)
+		@@phase_queue.push(phase)
 	end
 	def enable
 		@enabled=1
@@ -51,6 +97,9 @@ class Phase
 	end
 	def get_steps()
 		return @steps
+	end
+	def get_status
+		return @enabled
 	end
 	def move_to_before(name_next)
                 temp_phase=self
@@ -83,6 +132,9 @@ class Option
 	def get_response
 		return @response
 	end
+	def add_credit(new_credit)
+		@credit+=new_credit
+	end
 end
 
 
@@ -101,8 +153,10 @@ end
 #Question class with a query string which will be displayed as the question at the prompt and an optionset which will be the choice of answers
 #The name field is to be used as an id and it is suggested to use the required variable's name as the name
 class Question
+
 	@@question_queue = Array.new
 	@@asked_list = Array.new
+	@@credit_threshold = 0
 	#use this to create an objective question
 	def initialize(name,query_string,options,credits=[])
 		@name = name
@@ -117,6 +171,7 @@ class Question
 		end
 		@choice_selected = ""
 		@status = "created"
+		@hide = 0
 		@@question_queue.push(self)
 	end
 	#A wrapper to have uniform constructor names
@@ -155,11 +210,39 @@ class Question
 	def Question.clear_asked_list
 		@@asked_list.clear
 	end
+        def Question.set_expertise(expertise)
+                case expertise
+                when "Newbie"
+                @@credit_threshold = 30
+                when "Average"
+                @@credit_threshold = 60
+                when "Good"
+                @@credit_threshold = 100
+		end
+        end
+
+	def modify_credit(option_string,new_credit)
+		@optionset.each do |option_item|
+			if option_item.get_response == option_string
+				option_item.add_credit(new_credit)
+			end
+		end
+	end
+
 	def setask(answer=nil)
-		if(answer!=nil)
+		if answer!=nil && @status!="committed"
 			@choice_selected=answer
+		elsif @status!="committed"
+			@choice_selected=$hash_guess[@name].call.get_answer
+			modify_credit(@choice_selected,$hash_guess[@name].call.get_credit)
 		end
 		@status = "ask"
+		if $hash_guess[@name].call.get_credit>@@credit_threshold
+			@hide=1
+		end
+	end
+	def get_hide
+		return @hide
 	end
 	def answered(option_selected)
 		@status = "answered"
@@ -217,29 +300,6 @@ class Question
 end
 
 
-class Sysvars
-	@@rpm_build_root="/tmp/tmproot"
-	@@source_dir="$HOME/.apbd/SOURCES"
-	@@extracted_dir=String.new
-	def Sysvars.set_source_dir(dir)
-		@@source_dir = dir
-	end
-	def Sysvars.set_rpm_build_root(dir)
-		@@rpm_build_root = dir
-	end
-	def Sysvars.set_extracted_dir(dir)
-                @@extracted_dir = "#{Sysvars.get_source_dir}/#{File.basename(dir)}"
-        end
-	def Sysvars.get_source_dir
-		return @@source_dir
-	end	
-	def Sysvars.get_rpm_build_root
-		return @@rpm_build_root
-	end
-	def Sysvars.get_extracted_dir
-                return @@extracted_dir
-        end
-end
 
 class Pkgvars
 
@@ -260,6 +320,9 @@ class Pkgvars
 	@@maintainer = String.new
 	@@summary = String.new
 	@@Description = String.new
+	@@packager_name = String.new
+	@@packager_email = String.new
+	@@changes = String.new
 
 	def Pkgvars.set_var(var_name,value)
 		case var_name
@@ -267,6 +330,9 @@ class Pkgvars
 			@@pkg_name = value
 			when "src_path"
 			@@src_path = value
+			if(@@pkg_name == "")
+			@@pkg_name = File.basename(@@src_path).split("-")[0]
+			end
 			when "version"
 			@@version = value
 			when "release"
@@ -297,6 +363,12 @@ class Pkgvars
 			@@summary = value
 			when "description"
 			@@description = value
+			when "packager_name"
+			@@packager_name = value
+			when "packager_email"
+			@@packager_email = value
+			when "changes"
+			@@changes = value
 		end
 	end
 	
@@ -355,14 +427,56 @@ class Pkgvars
 	def Pkgvars.get_install_args
 		return @@install_args
 	end
+	
 	def Pkgvars.get_maintainer
                 return @@maintainer
         end
+	
         def Pkgvars.get_summary
                 return @@summary
         end
+	
         def Pkgvars.get_description
                 return @@description
         end
+	
+	def Pkgvars.get_packager_name
+		return @@packager_name
+	end
+
+	def Pkgvars.get_packager_email
+		return @@packager_email
+	end
+
+	def Pkgvars.get_changes
+		return @@changes
+	end
 
 end
+
+
+class Sysvars
+
+        @@rpm_build_root="/tmp/tmproot/"
+        @@source_dir="#{get_homedir}/.apbd/SOURCES"
+        @@extracted_dir=String.new
+        def Sysvars.set_source_dir(dir)
+                @@source_dir = dir
+        end
+        def Sysvars.set_rpm_build_root(dir)
+                @@rpm_build_root = dir
+        end
+        def Sysvars.set_extracted_dir(dir)
+                @@extracted_dir = "#{Sysvars.get_source_dir}/#{File.basename(dir)}"
+        end
+        def Sysvars.get_source_dir
+                return @@source_dir
+        end
+        def Sysvars.get_rpm_build_root
+                return @@rpm_build_root
+        end
+        def Sysvars.get_extracted_dir
+                return @@extracted_dir
+        end
+end
+

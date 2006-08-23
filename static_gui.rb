@@ -53,7 +53,8 @@ class FrmMain < Qt::MainWindow
         @btnNext.setGeometry( Qt::Rect.new(280, 470, 81, 30) )
 
         @txtprocessoutput = Qt::TextEdit.new(centralWidget(), "txtprocessoutput")
-        @txtprocessoutput.setEnabled( false )
+        @txtprocessoutput.setEnabled( true )
+	 @txtprocessoutput.setReadOnly( true )
         @txtprocessoutput.setGeometry( Qt::Rect.new(21, 360, 500, 102) )
 
         @btnQuit = Qt::PushButton.new(centralWidget(), "btnQuit")
@@ -205,6 +206,18 @@ class FrmMain < Qt::MainWindow
 	end
     end
 
+    def engine_count_reduce
+	@engine_count-=1
+    end
+
+    def engine_count_increase
+	@engine_count+=1
+    end
+
+    def get_engine_count
+	return @engine_count
+    end
+
     def selectFile(*k)
         print("FrmMain.selectFile(): Not implemented yet.\n")
     end
@@ -235,6 +248,13 @@ class FrmMain < Qt::MainWindow
 	@txtprocessoutput.append(message)
     end
 
+    def get_btnBack
+	return @btnBack
+    end
+
+    def get_btnNext
+	return @btnNext
+    end
 
 end
 

@@ -2,8 +2,9 @@ require 'Qt'
 require 'Classes.rb'
 
 class Question_options_widget < Qt::Widget
-	
-	def initialize(name,label,options,parent,answer)
+
+	slots 'question_toggle()'
+	def initialize(name,label,options,parent,answer,hidden)
   		super(parent)
 		@name = name
 		@hbox = Qt::HBox.new(self)
@@ -21,6 +22,11 @@ class Question_options_widget < Qt::Widget
 				@radio.setChecked(TRUE)
 			end
 		end
+		if hidden==1
+			@bgrp.setDisabled(true)
+		end
+                @chk = Qt::CheckBox.new(@hbox)
+                Qt::Object.connect(@chk, SIGNAL("clicked()"), self, SLOT("question_toggle()") )
 	end
 	def get_answer
 		return @bgrp.selected.text
@@ -28,12 +34,18 @@ class Question_options_widget < Qt::Widget
 	def get_name
 		return @name
 	end
-
+        def question_toggle()
+                @bgrp.setDisabled(@bgrp.isEnabled)
+        end
 
 end
 
+
+
 class Question_text_widget < Qt::Widget
-	def initialize(name,label,parent,answer)
+
+	slots 'question_toggle()'
+	def initialize(name,label,parent,answer,hidden)
 		super(parent)
 		@name = name
 		@hbox = Qt::HBox.new(self)
@@ -43,6 +55,12 @@ class Question_text_widget < Qt::Widget
 		@lbl.setText(label)
 		@txt = Qt::LineEdit.new(@hbox,name)
 		@txt.setText(answer)
+		if hidden==1
+			@txt.setDisabled(true)
+		end
+		@chk = Qt::CheckBox.new(@hbox)
+	        Qt::Object.connect(@chk, SIGNAL("clicked()"), self, SLOT("question_toggle()") )
+
 	end
 	def get_answer
 		return @txt.text()
@@ -50,12 +68,18 @@ class Question_text_widget < Qt::Widget
 	def get_name
 		return @name
 	end
+	def question_toggle()
+		@txt.setDisabled(@txt.isEnabled)
+	end
+
 end
+
 
 
 class Question_combo_widget < Qt::Widget
 
-        def initialize(name,label,options,parent,answer)
+	slots 'question_toggle()'
+        def initialize(name,label,options,parent,answer,hidden)
                 super(parent)
                 @name = name
                 @hbox = Qt::HBox.new(self)
@@ -69,6 +93,11 @@ class Question_combo_widget < Qt::Widget
 		if answer!=""
 			@combo.setCurrentText(answer)
 		end
+		if hidden==1
+			@combo.setDisabled(true)
+		end
+                @chk = Qt::CheckBox.new(@hbox)
+                Qt::Object.connect(@chk, SIGNAL("clicked()"), self, SLOT("question_toggle()") )
         end
         def get_answer
                 return @combo.currentText
@@ -76,7 +105,9 @@ class Question_combo_widget < Qt::Widget
         def get_name
                 return @name
         end
-
+	def question_toggle()
+                @combo.setDisabled(@combo.isEnabled)
+        end
 
 end
 
@@ -87,27 +118,21 @@ def generate_question_widget_list(w,question_queue)
 	question_queue.each do |question_item|
 	if question_item.get_status=="ask"
 		if question_item.get_optionset.size==0
-			w.addwidget_to_frm(Question_text_widget.new(question_item.get_name,question_item.get_query_string,w.get_main_box,question_item.get_answer))
+			w.addwidget_to_frm(Question_text_widget.new(question_item.get_name,question_item.get_query_string,w.get_main_box,question_item.get_answer,question_item.get_hide))
 		elsif question_item.get_optionset.size==2
-			w.addwidget_to_frm(Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset,w.get_main_box,question_item.get_answer))
+			w.addwidget_to_frm(Question_options_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset,w.get_main_box,question_item.get_answer,question_item.get_hide))
 		else
-			w.addwidget_to_frm(Question_combo_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset,w.get_main_box,question_item.get_answer))
+			w.addwidget_to_frm(Question_combo_widget.new(question_item.get_name,question_item.get_query_string,question_item.get_optionset,w.get_main_box,question_item.get_answer,question_item.get_hide))
 		end
 	end
 	end
 
 end
 
-=begin
-##########################
-#Test the above functions#
-##########################
-Question.create_yes_no("sample","Test Query")
-##Comment out the previous line and Uncomment the next line to see that it works for the Question_text_widget class
-Question.create_text_question("sample","Test Query")
-generate_question_widget(Question.get_question_queue)
+def goback(widget)
+	widget.get_btnBack.clicked
+end
 
-##########################
-#Testing ends            #
-##########################
-=end
+def goNext(widget)
+	widget.get_btnNext.clicked
+end

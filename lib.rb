@@ -1,14 +1,30 @@
 require 'rubygems'
 require 'xml/libxml'
 require 'Classes.rb'
+require 'open-uri'
 
+def dummy
+	return Guess.new("",0)
+end
 
 def parse_distro_name_from_release(filename)
 	return File.new(filename,"r").gets.split(" ")[0]
 end
 
-def get_homedir()
+def get_homedir
 	return `echo $HOME`.chomp
+end
+
+def get_packager_name
+	return Guess.new(`whoami`.chomp,30)
+end
+
+def get_changes
+	if File.exist?("#{Sysvars.get_extracted_dir}/CHANGES")
+		return Guess.new(File.new("#{Sysvars.get_extracted_dir}/CHANGES").read,30)
+	else
+		return Guess.new("",0)
+	end
 end
 
 def find_distro()
@@ -18,35 +34,35 @@ if FileTest.exist?("/usr/bin/lsb_release")
 	system("lsb_release -a | grep -i \"Distributor ID:\" | awk -F \":\" '{ print $2 }' | awk '{ print $1 }'>lsb_release_output")
 	distro_name = File.new("lsb_release_output","r").gets
 	system("rm lsb_release_output")
-	return distro_name
+	return Guess.new(distro_name,60)
 
 elsif FileTest.exist?("/etc/redhat-release")
 
-	return parse_distro_name_from_release("/etc/redhat-release")
+	return Guess.new(parse_distro_name_from_release("/etc/redhat-release"),90)
 
 elsif FileTest.exist?("/etc/mandrake-release")
 
-	return parse_distro_name_from_release("/etc/mandrake-release")
+	return Guess.new(parse_distro_name_from_release("/etc/mandrake-release"),90)
 
 elsif FileTest.exist?("/etc/issue.net")
 
-	return parse_distro_name_from_release("/etc/issue.net")
+	return Guess.new(parse_distro_name_from_release("/etc/issue.net"),60)
 
 elsif FileTest.exist?("/etc/gentoo-release")
 
-	return parse_distro_name_from_release("/etc/gentoo-release")
+	return Guess.new(parse_distro_name_from_release("/etc/gentoo-release"),90)
 
 elsif FileTest.exist?("/etc/slackware-version")
 
-	return parse_distro_name_from_release("/etc/slackware-version")
+	return Guess.new(parse_distro_name_from_release("/etc/slackware-version"),90)
 
 elsif FileTest.exist?("/sbin/SuSEconfig")
 
-	return "SuSE"
+	return Guess.new("SuSE",90)
 
 else
         
-	return "Unknown"
+	return Guess.new("Unknown",0)
 
 end
 
@@ -55,18 +71,17 @@ end
 
 def get_arch()
 
-	system("uname -m >uname_output")
-	arch = File.new("uname_output","r").gets
-	system("rm uname_output")
-	return arch
+	return Guess.new(`uname -m`.chomp,90)
 
 end
 
 
-def get_package_name(package_path)
-
-	return package_path.split("/")[package_path.split("/").size-1].split("-")[0]
-
+def get_package_name()
+	if Pkgvars.get_pkg_name.size!=0
+	return Pkgvars.get_pkg_name
+	else
+	return File.basename(Pkgvars.get_src_path).split("-")[0]
+	end
 end
 
 
@@ -74,17 +89,24 @@ def get_version
 
 	package_path = Pkgvars.get_src_path
 	version = ""
-	package_path.split("/")[package_path.split("/").size-1].split("-").each do |part|
+	Pkgvars.get_src_path.split("/")[Pkgvars.get_src_path.split("/").size-1].split("-").each do |part|
 	if part.to_f!=0.0
 		version = part.split(".")[0].concat(".").concat(part.split(".")[1])
 	end
 	end
-	return version
+	return Guess.new(version,60)
 
+end
+
+def download_file(url,destdir=".")
+	downloaded_file = File.new("#{destdir}/#{File.basename(url)}","w")
+	downloaded_file.print(open(url).read)
 end
 
 
 def find_license_type
+
+puts Sysvars.get_extracted_dir
 
 if FileTest.exist?("#{Sysvars.get_extracted_dir}/COPYING")
 	license_file = File.new("#{Sysvars.get_extracted_dir}/COPYING")
@@ -93,21 +115,21 @@ elsif FileTest.exist?("#{Sysvars.get_extracted_dir}/copying")
 elsif FileTest.exist?("#{Sysvars.get_extracted_dir}/LICENSE")
         license_file = File.new("#{Sysvars.get_extracted_dir}/LICENSE")
 elsif FileTest.exist?("#{Sysvars.get_extracted_dir}/MIT-LICENSE")
-	return "MIT"
+	return Guess.new("MIT",90)
 else
-	return "Other"
+	return Guess.new("Other",30)
 end
 
-license_content = File.read(license_file)
+license_content = license_file.read
 
 if (license_content =~ /GNU LESSER GENERAL PUBLIC LICENSE/)
-	return "LGPL"
+	return Guess.new("LGPL",90)
 elsif (license_content =~ /GNU LIBRARY GENERAL PUBLIC LICENSE/)
-	return "Library GPL"
+	return Guess.new("Library GPL",90)
 elsif (license_content =~ /GNU GENERAL PUBLIC LICENSE/)
-	return "GPL"
+	return Guess.new("GPL",90)
 elsif (license_content =~ /BSD/)
-	return "BSD"
+	return Guess.new("BSD",90)
 end
 
 end
@@ -146,15 +168,16 @@ def unpack(filename)
 		system("mkdir #{name.split(".")[0]}; cd #{name.split(".")[0]}")
 	end
 	system("cd #{sourcedir};tar -x#{arg}vf #{filename} >/tmp/#{name}.qsx")
-	Sysvars.set_extracted_dir(`cat /tmp/imlib2-1.2.2.tar.gz.qst | awk -F '/' '{print $1}' | uniq`.chomp)
+	Sysvars.set_extracted_dir(`cat /tmp/#{File.basename(Pkgvars.get_src_path)}.qst | awk -F '/' '{print $1}' | uniq`.chomp)
 end
 
 def file_get_unpack
 		package_path = "#{get_homedir()}/.apbd/PACKAGES/#{File.basename(Pkgvars.get_src_path)}"
                 if FileTest.exist?(Pkgvars.get_src_path)
+			system("cp #{Pkgvars.get_src_path} #{get_homedir()}/.apbd/PACKAGES/")
                         unpack(Pkgvars.get_src_path)
                 elsif Pkgvars.get_src_path.split("://")[0]=="http" || Pkgvars.get_src_path.split("://")[0]=="ftp"
-			system("wget #{Pkgvars.get_src_path}")
+			download_file(Pkgvars.get_src_path,"#{get_homedir()}/.apbd/PACKAGES")
                         unpack(package_path)
                 else
                         return 0
@@ -167,7 +190,7 @@ def xml_writeout
 	root = doc.root
 	root << header = XML::Node.new('Header')
 	header << package = XML::Node.new('Package')
-	package['Name'] = Pkgvars.get_pkg_name
+	package['Name'] = get_package_name
 	package << version = XML::Node.new('Version')
 	version['value'] = Pkgvars.get_version
 	version << release = XML::Node.new('Release')
@@ -216,13 +239,22 @@ def xml_writeout
 	root << clean = XML::Node.new('Clean')
 
 	root << files = XML::Node.new('Files')
+	list_files = Dir.glob("/tmp/tmproot/**/*")
+	list_files.each do |file|
+	files << sub_files = XML::Node.new("files")
+	sub_files << file.split("/tmp/tmproot")[1]
+	end
 
 	root << changelog = XML::Node.new('Changelog')
 	changelog << date = XML::Node.new('Date')
+	date << Time.now.strftime("%a %b %d %Y")
 	changelog << name = XML::Node.new('Name')
+	name << Pkgvars.get_packager_name
 	changelog << email = XML::Node.new('email')
+	email << Pkgvars.get_packager_email
 	changelog << changes = XML::Node.new('Changes')
+	changes << Pkgvars.get_changes
 	
 	format = true
-	doc.save("#{Pkgvars.get_pkg_name}.xml", format)
+	doc.save("#{get_homedir}/.apbd/#{get_package_name}.xml", format)
 end
