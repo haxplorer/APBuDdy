@@ -14,15 +14,19 @@ case count
 when 0
 	Question.get_question_byname("pkg_name").setask
 	Question.get_question_byname("src_path").setask
+	Question.get_question_byname("patch_path").setask
 	generate_question_widget_list(w,Question.get_question_queue)
 when 1
 	
 	w.proc_outbox_append("Trying to unpack file. Please Wait...")
-	if file_get_unpack == 0
+	if src_validate == 0
 		w.proc_outbox_append("The selected file is invalid")
 		goback(w)
 		return
 	end
+	Phase.phase_push(generate_getfile_phase)
+	Phase.phase_push(generate_unpack_phase)
+	Phase.run_phase_queue
 	w.proc_outbox_append("Unpacking successful")
 	puts "version"
         Question.get_question_byname("version").setask
@@ -50,6 +54,8 @@ when 2
 when 3
 	Question.get_question_byname("buildroot").setask
 	Question.get_question_byname("configure_args").setask
+	Question.get_question_byname("cflags").setask
+	Question.get_question_byname("cxxflags").setask
         generate_question_widget_list(w,Question.get_question_queue)
 	w.proc_outbox_append("Trying to configure... Please Wait..")
 when 4

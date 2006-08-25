@@ -171,17 +171,57 @@ def unpack(filename)
 	Sysvars.set_extracted_dir(`cat /tmp/#{File.basename(Pkgvars.get_src_path)}.qst | awk -F '/' '{print $1}' | uniq`.chomp)
 end
 
+def src_validate
+	if !FileTest.exist?(Pkgvars.get_src_path) && !(Pkgvars.get_src_path.split("://")[0]=="http" || Pkgvars.get_src_path.split("://")[0]=="ftp")
+		return 0
+	else
+		return 1
+	end
+end
+
 def file_get_unpack
-		package_path = "#{get_homedir()}/.apbd/PACKAGES/#{File.basename(Pkgvars.get_src_path)}"
-                if FileTest.exist?(Pkgvars.get_src_path)
-			system("cp #{Pkgvars.get_src_path} #{get_homedir()}/.apbd/PACKAGES/")
-                        unpack(Pkgvars.get_src_path)
-                elsif Pkgvars.get_src_path.split("://")[0]=="http" || Pkgvars.get_src_path.split("://")[0]=="ftp"
-			download_file(Pkgvars.get_src_path,"#{get_homedir()}/.apbd/PACKAGES")
-                        unpack(package_path)
-                else
-                        return 0
-                end
+	package_path = "#{get_homedir()}/.apbd/PACKAGES/#{File.basename(Pkgvars.get_src_path)}"
+        if FileTest.exist?(Pkgvars.get_src_path)
+		system("cp #{Pkgvars.get_src_path} #{get_homedir()}/.apbd/PACKAGES/")
+                unpack(Pkgvars.get_src_path)
+        elsif Pkgvars.get_src_path.split("://")[0]=="http" || Pkgvars.get_src_path.split("://")[0]=="ftp"
+		download_file(Pkgvars.get_src_path,"#{get_homedir()}/.apbd/PACKAGES")
+                unpack(package_path)
+        else
+                return 0
+        end
+end
+
+def guess_cflags
+
+##FIX ME: many of the patterns used here may not be right, as i didnt get access to those architectures. plz fix the patterns, if you have access to such architectures.
+
+#Pentium II (Intel)
+	if File.new("/proc/cpuinfo").read =~ /Intel(R) Pentium(R) II/
+		return Guess.new("-march=pentium2 -O3 -pipe -fomit-frame-pointer",90)
+
+#Celeron (Mendocino), aka Celeron1 (Intel)
+	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Celeron(R) /
+		return Guess.new("-march=pentium2 -O3 -pipe -fomit-frame-pointer",60)
+
+#Pentium III (Intel)
+	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Pentium(R) III/
+		return Guess.new("-march=pentium3 -O3 -pipe -fomit-frame-pointer",90)
+
+#Celeron (Coppermine) aka Celeron2 (Intel)
+	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Celeron(R) 2/
+		return Guess.new("-march=pentium3 -O3 -pipe -fomit-frame-pointer",60)
+
+#Celeron (Willamette?) (Intel)
+	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Celeron(R) /
+		return Guess.new("-march=pentium4 -O3 -pipe -fomit-frame-pointer",60)
+
+#Pentium 4 (Intel)
+	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Pentium(R) 4/
+		return Guess.new("-march=pentium4 -O3 -pipe -fomit-frame-pointer",90)
+	else
+		return Guess.new("$RPM_OPT_FLAGS",60)
+	end
 end
 
 def xml_writeout
@@ -206,6 +246,8 @@ def xml_writeout
 	version << buildroot = XML::Node.new('BuildRoot')
 	buildroot << Pkgvars.get_buildroot
 	version << patches = XML::Node.new('Patches')
+	patches << patch = XML::Node.new('Patch')
+	patch << Pkgvars.get_patch_path
 	version << vendor = XML::Node.new('Vendor')
 	version << splitrule = XML::Node.new('Splitrule')
 	version << section = XML::Node.new('Section')
@@ -224,25 +266,38 @@ def xml_writeout
 	
 	root << prep = XML::Node.new('Prep')
 	prep << setup = XML::Node.new('Setup')
-	prep << patch = XML::Node.new('Patch')
+	prep << prep_patch = XML::Node.new('Patch')
 	
 	root << build = XML::Node.new('Build')
 	build << configure_flags = XML::Node.new('configure-flags')
 	configure_flags << Pkgvars.get_extra_configure_args
+	build << cflags = XML::Node.new('CFLAGS')
+	cflags << "export CFLAGS=\"#{Pkgvars.get_cflags}\""
+	build << cxxflags = XML::Node.new('CXXFLAGS')
+	cxxflags << "export CXXFLAGS=\"#{Pkgvars.get_cxxflags}\""
 
 	root << install = XML::Node.new('Install')
 	install << install_target = XML::Node.new('install-target')
+	install_target << "install"
 	
 	root << post = XML::Node.new('Post')
 	post << post_calls = XML::Node.new('Post-calls')
 	
 	root << clean = XML::Node.new('Clean')
+	clean << cleancalls = XML::Node.new('Clean-calls')
+	cleancalls << "rm -rf $RPM_BUILD_ROOT"
 
 	root << files = XML::Node.new('Files')
-	list_files = Dir.glob("/tmp/tmproot/**/*")
+	list_files = Dir.glob("#{Pkgvars.get_buildroot}/**/*")
 	list_files.each do |file|
-	files << sub_files = XML::Node.new("files")
-	sub_files << file.split("/tmp/tmproot")[1]
+		file_name = file.split("#{Pkgvars.get_buildroot}/")[1]
+		if File.directory?(file)
+			files << dir = XML::Node.new("dir")
+			dir << "/#{file_name}"
+		else
+			files << sub_files = XML::Node.new("files")
+			sub_files << "/#{file_name}"
+		end
 	end
 
 	root << changelog = XML::Node.new('Changelog')

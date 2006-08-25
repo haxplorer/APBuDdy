@@ -42,31 +42,31 @@ specfile.print("BuildRoot:\t#{version.find_first('BuildRoot').content}\n")
 specfile.print("%description\n")
 specfile.print("#{header.find_first('Description').content}\n")
 
-if header.find_first('Description')['case'] == "Suse"
+if header.find_first('Description')['case'] == "SUSE"
 	specfile.print("#{header.find_first('Authors')}\n")
 end
 
 specfile.print("\n%prep\n")
-specfile.print("cd %{_topdir}/BUILD\n")
-specfile.print("rm -rf %{name}-%{version}-build\n")
-specfile.print("tar -xjf %{_topdir}/SOURCES/\n")
+specfile.print("%setup -n %{name}-%{version}\n")
+specfile.print("%patch -p1")
 
 specfile.print("\n%build\n")
-specfile.print("cd %{name}-%{version}-build\n")
 
 count=0
 build.find('configure-flags').each do |cflag|
 	if count==0
 		specfile.print("./configure ")
 	end
-	specfile.print("--#{cflag.content}")
+	if (cflag.content!="")
+		specfile.print("--#{cflag.content}")
+	end
 end
 
 build.find('make-target').each do |mtarget|
 	specfile.print("\nmake #{mtarget.content}\n")
 end
 
-specfile.print("\n%install\n")
+specfile.print("\n\n%install\n")
 specfile.print("cd %{name}-%{version}-build\n")
 
 specfile.print("make ")
@@ -114,7 +114,7 @@ end
 specfile.print("\n%changelog\n")
 
 root.find('Changelog').each do |changelog|
-	specfile.print("* #{changelog.find_first('Date').content} #{changelog.find_first('Name').content} <#{changelog.find_first('email')}>\n- #{changelog.find_first('Changes')}\n")
+	specfile.print("* #{changelog.find_first('Date').content} #{changelog.find_first('Name').content} <#{changelog.find_first('email').content}>\n- #{changelog.find_first('Changes').content}\n")
 end
 
 end

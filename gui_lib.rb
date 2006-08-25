@@ -112,6 +112,51 @@ class Question_combo_widget < Qt::Widget
 end
 
 
+class Add_phase_widget < Qt::Widget
+
+        slots 'add_phase()'
+        def initialize(parent=nil)
+                super(parent)
+		self.setFixedHeight(35)
+                @hbox = Qt::HBox.new(self)
+                @hbox.setGeometry( Qt::Rect.new(40, 0, 450, 30) )
+                @lbl = Qt::Label.new(@hbox)
+                @lbl.setText("Add command")
+		@txt = Qt::LineEdit.new(@hbox)
+		@combo_pos = Qt::ComboBox.new(@hbox)
+                @combo_pos.insertItem("before")
+		@combo_pos.insertItem("after")
+		@combo_pos.insertItem("first")
+		@combo_pos.insertItem("last")
+                @combo_phase = Qt::ComboBox.new(@hbox)
+                Phase.get_phase_queue.each do |phase_item|
+                        @combo_phase.insertItem(phase_item.get_name)
+                end
+		@btn_add = Qt::PushButton.new(@hbox)
+		@btn_add.setText("Add")
+		@btn_cancel = Qt::PushButton.new(@hbox)
+		@btn_cancel.setText("Cancel")
+	        Qt::Object.connect(@btn_add, SIGNAL("clicked()"), self, SLOT("add_phase()") )
+		Qt::Object.connect(@btn_cancel, SIGNAL("clicked()"), self, SLOT("close()") )
+        end
+
+	def add_phase
+		if @combo_pos.currentText=="before" && @txt.text.size>0
+			Phase.phase_new_before(@txt.text,@txt.text,@combo_phase.currentText,1)
+		elsif @combo_pos.currentText=="after" && @txt.text.size>0
+			Phase.phase_new_after(@txt.text,@txt.text,@combo_phase.currentText,1)
+		elsif @combo_pos.currentText=="first" && @txt.text.size>0
+			temp_phase = Phase.new(@txt.text,@txt.text,@combo_phase.currentText)
+			Phase.phase_addto_front(temp_phase)
+		elsif @combo_pos.currentText=="last" && @txt.text.size>0
+			temp_phase = Phase.new(@txt.text,@txt.text,@combo_phase.currentText)
+			Phase.phase_push(temp_phase)
+		end
+		close
+	end
+
+end
+
 
 def generate_question_widget_list(w,question_queue)
 	count = 0

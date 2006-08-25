@@ -4,12 +4,15 @@ require 'lib.rb'
 def generate_predefined_questions
 	Question.create_text_question("pkg_name","Package Name")
 	Question.create_text_question("src_path","Source File")
+	Question.create_text_question("patch_path","Patch File")
 	Question.create_text_question("version","Version")
 	Question.create_text_question("release","Release")
 	Question.create_multiple_choice("license","License",["GPL","LGPL","Library GPL","BSD","MIT","Other"],[90,30,20,30,10])
 	Question.create_text_question("group","Group")
 	Question.create_text_question("buildroot","Build Root")
 	Question.create_text_question("configure_args","Configure arguments")
+	Question.create_text_question("cflags","CFLAGS")
+	Question.create_text_question("cxxflags","CXXFLAGS")
 	Question.create_text_question("distro","Distribution")
 	Question.create_text_question("maintainer","Maintainer")
 	Question.create_text_question("depends","Depends")
@@ -22,25 +25,3 @@ def generate_predefined_questions
 	Question.create_text_question("summary","Summary")
 	Question.create_text_question("description","Description")
 end
-=begin
-	hash_guess = Hash.new()
-	hash_guess["pkg_name"] = proc{dummy}
-	hash_guess["src_path"] = proc{dummy}
-	hash_guess["version"] = proc{get_version}
-	hash_guess["release"] = proc{dummy}
-	hash_guess["license"] = proc{find_license_type}
-	hash_guess["group"] = proc{dummy}
-	hash_guess["buildroot"] = proc{dummy}
-	hash_guess["configure_args"] = proc{dummy}
-	hash_guess["distro"] = proc{find_distro}
-	hash_guess["maintainer"] = proc{dummy}
-	hash_guess["depends"] = proc{dummy}
-	hash_guess["arch"] = proc{get_arch}
-	hash_guess["vendor"] = proc{dummy}
-	hash_guess["packager_name"] = proc{get_packager_name}
-	hash_guess["packager_email"] = proc{dummy}
-	hash_guess["changes"] = proc{get_changes}
-	hash_guess["section"] = proc{dummy}
-	hash_guess["summary"] = proc{dummy}
-	hash_guess["description"] = proc{dummy}
-=end

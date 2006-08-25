@@ -19,7 +19,7 @@ class FrmMain < Qt::MainWindow
     'helpIndex()',
     'helpContents()',
     'helpAbout()',
-    'extrasSavePoints()',
+    'extrasAddCommand()',
     'goBack()',
     'goNext()',
     'selectFile()',
@@ -73,7 +73,7 @@ class FrmMain < Qt::MainWindow
         @helpIndexAction= Qt::Action.new(self, "helpIndexAction")
         @helpAboutAction= Qt::Action.new(self, "helpAboutAction")
         @fileNewImport_templateAction= Qt::Action.new(self, "fileNewImport_templateAction")
-        @extrasSavePointsAction= Qt::Action.new(self, "extrasSavePointsAction")
+        @extrasAddCommandAction= Qt::Action.new(self, "extrasAddCommandAction")
         @fileStart_AgainAction= Qt::Action.new(self, "fileStart_AgainAction")
 
 
@@ -89,7 +89,7 @@ class FrmMain < Qt::MainWindow
         @MenuBar.insertItem( "", @fileMenu, 1 )
 
         @Extras = Qt::PopupMenu.new( self )
-        @extrasSavePointsAction.addTo( @Extras )
+        @extrasAddCommandAction.addTo( @Extras )
         @MenuBar.insertItem( "", @Extras, 2 )
 
         @helpMenu = Qt::PopupMenu.new( self )
@@ -108,7 +108,7 @@ class FrmMain < Qt::MainWindow
         Qt::Object.connect(@helpContentsAction, SIGNAL("activated()"), self, SLOT("helpContents()") )
         Qt::Object.connect(@helpAboutAction, SIGNAL("activated()"), self, SLOT("helpAbout()") )
         Qt::Object.connect(@btnQuit, SIGNAL("clicked()"), self, SLOT("close()") )
-        Qt::Object.connect(@extrasSavePointsAction, SIGNAL("activated()"), self, SLOT("extrasSavePoints()") )
+        Qt::Object.connect(@extrasAddCommandAction, SIGNAL("activated()"), self, SLOT("extrasAddCommand()") )
         Qt::Object.connect(@btnBack, SIGNAL("clicked()"), self, SLOT("goBack()") )
         Qt::Object.connect(@btnNext, SIGNAL("clicked()"), self, SLOT("goNext()") )
         Qt::Object.connect(@fileStart_AgainAction, SIGNAL("activated()"), self, SLOT("fileStartAgain()") )
@@ -124,7 +124,7 @@ class FrmMain < Qt::MainWindow
     #  language.
     #
     def languageChange()
-        setCaption(trUtf8("Quickspec"))
+        setCaption(trUtf8("Template System - Build your packages Easily"))
         @btnBack.setText( trUtf8("Bac&k") )
         @btnBack.setAccel( Qt::KeySequence.new(trUtf8("Alt+K")) )
         @btnNext.setText( trUtf8("Ne&xt") )
@@ -146,8 +146,8 @@ class FrmMain < Qt::MainWindow
         @fileNewImport_templateAction.setText(trUtf8("From &Template"))
         @fileNewImport_templateAction.setMenuText(trUtf8("From &Template"))
         @fileNewImport_templateAction.setAccel(Qt::KeySequence.new(nil))
-        @extrasSavePointsAction.setText(trUtf8("SavePoints"))
-        @extrasSavePointsAction.setMenuText(trUtf8("SavePoints"))
+        @extrasAddCommandAction.setText(trUtf8("Add Command"))
+        @extrasAddCommandAction.setMenuText(trUtf8("Add Command"))
         @fileStart_AgainAction.setText(trUtf8("&Start Again"))
         @fileStart_AgainAction.setMenuText(trUtf8("&Start Again"))
         if !@MenuBar.findItem(1).nil?
@@ -164,23 +164,24 @@ class FrmMain < Qt::MainWindow
 
 
     def fileExit(*k)
-        print("FrmMain.fileExit(): Not implemented yet.\n")
+	close
     end
 
     def helpIndex(*k)
-        print("FrmMain.helpIndex(): Not implemented yet.\n")
+	not_implemented
     end
 
     def helpContents(*k)
-        print("FrmMain.helpContents(): Not implemented yet.\n")
+	not_implemented
     end
 
     def helpAbout(*k)
-        print("FrmMain.helpAbout(): Not implemented yet.\n")
+	not_implemented
     end
 
-    def extrasSavePoints(*k)
-        print("FrmMain.extrasSavePoints(): Not implemented yet.\n")
+    def extrasAddCommand(*k)
+	cmd_widget = Add_phase_widget.new
+	cmd_widget.show
     end
 
     def goBack(*k)
@@ -219,15 +220,17 @@ class FrmMain < Qt::MainWindow
     end
 
     def selectFile(*k)
-        print("FrmMain.selectFile(): Not implemented yet.\n")
+	not_implemented
     end
 
-    def fileStartAgain(*k)
-        print("FrmMain.fileStartAgain(): Not implemented yet.\n")
+    def fileStartAgain(*k)	
+	while @engine_count>0
+	get_btnBack.clicked
+	end
     end
 
     def fileImportTemplate(*k)
-        print("FrmMain.fileImportTemplate(): Not implemented yet.\n")
+	not_implemented
     end
 
     def addwidget_to_frm(widget)
@@ -254,6 +257,13 @@ class FrmMain < Qt::MainWindow
 
     def get_btnNext
 	return @btnNext
+    end
+
+    def not_implemented
+        msgbox=Qt::MessageBox.new()
+        msgbox.setText("Will be available soon")
+        msgbox.show
+
     end
 
 end

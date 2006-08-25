@@ -23,6 +23,17 @@ end
 def generate_configure_phase()
 	configure_args = Pkgvars.get_configure_args
 	extra_configure_args = Pkgvars.get_extra_configure_args
+	if(Pkgvars.get_cflags=="")
+		system("export CFLAGS=\"$RPM_OPT_FLAGS\"")
+	else
+		system("export CFLAGS=\"Pkgvars.get_cflags\"")
+	end
+        if(Pkgvars.get_cxxflags=="")
+                system("export CFLAGS=\"$RPM_OPT_FLAGS\"")
+        else
+                system("export CFLAGS=\"Pkgvars.get_cxxflags\"")
+        end
+
 	steps = "./configure \\"
 	configure_args.each_with_index do |arg,i| 
 		if (i!=(arg.size-1)||extra_configure_args.size!=0)
@@ -85,7 +96,8 @@ def generate_install_phase()
         install_args.each_with_index do |arg,i| 
 		steps.concat("#{arg} ")
         end
-	steps.concat("DESTDIR=#{Sysvars.get_rpm_build_root}/#{Pkgvars.get_pkg_name} ")
+	steps.concat("DESTDIR=#{Sysvars.get_rpm_build_root}#{Pkgvars.get_pkg_name} ")
+	Pkgvars.set_var("buildroot","#{Sysvars.get_rpm_build_root}#{Pkgvars.get_pkg_name}")
 	steps.concat("install")
 	install_phase = Phase.new("gnu_install",steps)
         return install_phase
@@ -95,7 +107,7 @@ def perl_check()
         credit=0
         if FileTest.exist?("Makefile.PL")
                 credit=30
-		if File.new("Makefile.PL").read =~ /all/
+		if File.new("#{Sysvars.get_extracted_dir}/Makefile.PL").read =~ /all/
 			credit+=30
 		end
         end
@@ -103,8 +115,42 @@ def perl_check()
 end
 
 def generate_perl_makefile()
-        steps = "perl Makefile.PL"
+        steps = "perl ./Makefile.PL --all "
         perl_phase = Phase.new("perl",steps)
         return perl_phase
 
 end
+
+def generate_getfile_phase()
+	if !FileTest.exist?("#{get_homedir()}/.apbd/PACKAGES/")
+		system("mkdir #{get_homedir()}/.apbd/PACKAGES/")
+	end
+	if FileTest.exist?(Pkgvars.get_src_path)
+		steps = "cp #{Pkgvars.get_src_path} #{get_homedir()}/.apbd/PACKAGES/"
+	elsif Pkgvars.get_src_path.split("://")[0]=="http" || Pkgvars.get_src_path.split("://")[0]=="ftp"
+		steps = "cd #{get_homedir()}/.apbd/PACKAGES; wget #{Pkgvars.get_src_path}"
+	end
+	getfile_phase = Phase.new("getfile",steps)
+	return getfile_phase
+end
+
+def generate_unpack_phase()
+        name = File.basename(Pkgvars.get_src_path)
+        type = name.split(".")[name.split(".").size-1]
+        if type=="gz"
+                arg = "z"
+        elsif type=="bz2"
+                arg="j"
+        end
+        sourcedir = get_sourcedir()
+        system("tar -t#{arg}f #{get_homedir()}/.apbd/PACKAGES/#{File.basename(Pkgvars.get_src_path)} >/tmp/#{name}.qst")
+        system("awk -F \"/\" '{print $1}' /tmp/#{name}.qst | uniq | wc -l >/tmp/#{name}_no_of_folders_in_tar")
+        if File.new("/tmp/#{name}_no_of_folders_in_tar","r").gets.to_i>1
+                system("rm /tmp/#{name}_no_of_folders_in_tar")
+                system("mkdir #{name.split(".")[0]}; cd #{name.split(".")[0]}")
+        end
+	Sysvars.set_extracted_dir(`cat /tmp/#{name}.qst | awk -F '/' '{print $1}' | uniq`.chomp)
+        steps = "cd #{sourcedir};tar -x#{arg}vf #{get_homedir()}/.apbd/PACKAGES/#{File.basename(Pkgvars.get_src_path)} >/tmp/#{name}.qsx"
+	unpack_phase = Phase.new("unpack",steps)
+end
+

@@ -5,12 +5,15 @@ require 'lib.rb'
         $hash_guess = Hash.new()
         $hash_guess["pkg_name"] = proc{dummy}
         $hash_guess["src_path"] = proc{dummy}
+	$hash_guess["patch_path"] = proc{dummy}
         $hash_guess["version"] = proc{get_version}
         $hash_guess["release"] = proc{dummy}
         $hash_guess["license"] = proc{find_license_type}
         $hash_guess["group"] = proc{dummy}
         $hash_guess["buildroot"] = proc{dummy}
         $hash_guess["configure_args"] = proc{dummy}
+	$hash_guess["cflags"] = proc{dummy}
+	$hash_guess["cxxflags"] = proc{dummy}
         $hash_guess["distro"] = proc{find_distro}
         $hash_guess["maintainer"] = proc{dummy}
         $hash_guess["depends"] = proc{dummy}
@@ -54,9 +57,11 @@ class Phase
 #	end
 	def Phase.phase_new_after(name,steps,name_prev,enabled=0)
                 temp_phase=new(name,steps,enabled)
+		puts @@phase_queue.size
                 @@phase_queue.each_with_index do |phase_item,index|
-                        if phase_item.name==name_prev
-                                @@phase_queue.insert(index,temp_phase)
+                        if phase_item.get_name==name_prev
+                                @@phase_queue.insert(index+1,temp_phase)
+				return
                         end
                 end
 	end
@@ -64,8 +69,8 @@ class Phase
                 temp_phase=new(name,steps,enabled)
                 pos=0
                 @@phase_queue.each_with_index do |phase_item,index|
-                        if phase_item.name==name_next
-                              pos=index-1  
+                        if phase_item.get_name==name_next
+                              pos=index  
                         end
                 end
                 @@phase_queue.insert(pos,temp_phase)
@@ -89,6 +94,9 @@ class Phase
 	def Phase.phase_push(phase)
 		@@phase_queue.push(phase)
 	end
+	def Phase.phase_addto_front(phase)
+		@@phase_queue.insert(0,phase)
+	end
 	def enable
 		@enabled=1
 	end
@@ -100,6 +108,9 @@ class Phase
 	end
 	def get_status
 		return @enabled
+	end
+	def get_name
+		return @name
 	end
 	def move_to_before(name_next)
                 temp_phase=self
@@ -305,6 +316,7 @@ class Pkgvars
 
 	@@pkg_name = String.new
 	@@src_path = String.new
+	@@patch_path = String.new
 	@@version = String.new
 	@@release = String.new
 	@@arch = String.new
@@ -314,6 +326,8 @@ class Pkgvars
 	@@section = String.new
 	@@buildroot = String.new
 	@@configure_args = String.new
+	@@cflags = String.new
+	@@cxxflags = String.new
 	@@extra_configure_args = String.new
 	@@make_args = String.new
 	@@install_args = String.new
@@ -333,6 +347,8 @@ class Pkgvars
 			if(@@pkg_name == "")
 			@@pkg_name = File.basename(@@src_path).split("-")[0]
 			end
+			when "patch_path"
+			@@patch_path = value
 			when "version"
 			@@version = value
 			when "release"
@@ -351,6 +367,10 @@ class Pkgvars
 			@@buildroot = value
 			when "configure_args"
 			@@configure_args = value
+			when "cflags"
+			@@cflags = value
+			when "cxxflags"
+			@@cxxflags = value
 			when "extra_configure_args"
 			@@extra_configure_args = value
 			when "make_args"
@@ -378,6 +398,10 @@ class Pkgvars
 	
 	def Pkgvars.get_src_path
 		return @@src_path
+	end
+
+	def Pkgvars.get_patch_path
+		return @@patch_path
 	end
 	
 	def Pkgvars.get_version
@@ -414,6 +438,14 @@ class Pkgvars
 
 	def Pkgvars.get_configure_args
 		return @@configure_args
+	end
+
+	def Pkgvars.get_cflags
+		return @@cflags
+	end
+
+	def Pkgvars.get_cxxflags
+		return @@cxxflags
 	end
 
 	def Pkgvars.get_extra_configure_args
