@@ -24,9 +24,11 @@ when 1
 		goback(w)
 		return
 	end
-	Phase.phase_push(generate_getfile_phase)
-	Phase.phase_push(generate_unpack_phase)
-	Phase.run_phase_queue
+	Phase.phase_set(generate_getfile_phase)
+	Phase.phase_set(generate_unpack_phase)
+	w.get_btnNext.clicked
+when 2
+#	Phase.run_phase_queue
 	w.proc_outbox_append("Unpacking successful")
 	puts "version"
         Question.get_question_byname("version").setask
@@ -46,32 +48,35 @@ when 1
 	puts "section"
 	Question.get_question_byname("section").setask
 	generate_question_widget_list(w,Question.get_question_queue)
-when 2
+when 3
 	Question.get_question_byname("maintainer").setask
 	Question.get_question_byname("summary").setask
 	Question.get_question_byname("description").setask
 	generate_question_widget_list(w,Question.get_question_queue)
-when 3
+when 4
 	Question.get_question_byname("buildroot").setask
 	Question.get_question_byname("configure_args").setask
 	Question.get_question_byname("cflags").setask
 	Question.get_question_byname("cxxflags").setask
         generate_question_widget_list(w,Question.get_question_queue)
 	w.proc_outbox_append("Trying to configure... Please Wait..")
-when 4
+when 5
 	if(gnu_configure_check!=0)
-		Phase.phase_push(generate_configure_phase)
+		Phase.phase_set(generate_configure_phase)
 	elsif (perl_check!=0)
-		Phase.phase_push(generate_perl_makefile)
+		Phase.phase_set(generate_perl_makefile)
 	end
 	Phase.run_phase_queue
 	if(gnu_make_check!=0)
-		Phase.phase_push(generate_make_phase)
+		Phase.phase_set(generate_make_phase)
 	end
 	if(gnu_install_check!=0)
-		Phase.phase_push(generate_install_phase)
+		Phase.phase_set(generate_install_phase)
 	end
+#	w.get_btnNext.clicked
+#when 6
 	Phase.run_phase_queue
+	puts "Pkgvars.get_buildroot = #{Pkgvars.get_buildroot}"
 	w.proc_outbox_append("Writing out Abstract Package Build Description")
 	xml_writeout
 	w.proc_outbox_append("Job Done.. You may Quit now")
@@ -79,6 +84,7 @@ end
 end
 
 generate_predefined_questions
+generate_predefined_phases
 if(!File.exist?("#{get_homedir}/.apbd/.profile"))
 a = Qt::Application.new(ARGV)
 p = FrmProfile.new

@@ -198,6 +198,7 @@ class FrmMain < Qt::MainWindow
 	Question.commit_all_asked
 	clear_vbox
 	@engine_count+=1
+	Phase.run_phase_queue
 	engine(self,@engine_count)
     end
 

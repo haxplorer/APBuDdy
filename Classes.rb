@@ -12,7 +12,7 @@ require 'lib.rb'
         $hash_guess["group"] = proc{dummy}
         $hash_guess["buildroot"] = proc{dummy}
         $hash_guess["configure_args"] = proc{dummy}
-	$hash_guess["cflags"] = proc{dummy}
+	$hash_guess["cflags"] = proc{guess_cflags}
 	$hash_guess["cxxflags"] = proc{dummy}
         $hash_guess["distro"] = proc{find_distro}
         $hash_guess["maintainer"] = proc{dummy}
@@ -51,36 +51,57 @@ class Phase
 		@name=name
 		@steps=steps
 		@enabled=enabled
+		@status="created"
 	end
 #	def Phase.phase_empty(name)
 #		@name=name
 #	end
 	def Phase.phase_new_after(name,steps,name_prev,enabled=0)
                 temp_phase=new(name,steps,enabled)
+		temp_phase.set_status("ready")
 		puts @@phase_queue.size
+		pos=0
                 @@phase_queue.each_with_index do |phase_item,index|
                         if phase_item.get_name==name_prev
                                 @@phase_queue.insert(index+1,temp_phase)
-				return
+				pos=index
+				break
                         end
                 end
+                if enabled==1
+                        for i in pos...@@phase_queue.size
+                        if @@phase_queue[i].get_enabled==1 && @@phase_queue[i].get_status=="completed"
+                                @@phase_queue[i].set_status("ready")
+                        end
+			end
+                end
+
 	end
         def Phase.phase_new_before(name,steps,name_next,enabled=0)
                 temp_phase=new(name,steps,enabled)
                 pos=0
                 @@phase_queue.each_with_index do |phase_item,index|
                         if phase_item.get_name==name_next
-                              pos=index  
+                              pos=index
                         end
                 end
+		if enabled==1
+			for i in pos-1...@@phase_queue.size
+			if @@phase_queue[i].get_enabled==1 && @@phase_queue[i].get_status=="completed"
+				@@phase_queue[i].set_status("ready")
+			end
+			end
+			
+		end
+		temp_phase.set_status("ready")
                 @@phase_queue.insert(pos,temp_phase)
 	end
 	def Phase.run_phase_queue
                 @@phase_queue.each do |phase_item|
-		if phase_item.get_status==1
+		if phase_item.get_enabled==1 && phase_item.get_status=="ready"
                         puts phase_item.get_steps
                         system("cd #{Sysvars.get_extracted_dir};#{phase_item.get_steps}")
-			phase_item.disable
+			phase_item.set_status("completed")
 		end
                 end
 		
@@ -93,6 +114,19 @@ class Phase
 	end
 	def Phase.phase_push(phase)
 		@@phase_queue.push(phase)
+	end
+	def Phase.phase_set(phase)
+		@@phase_queue.each do |phase_item|
+			if phase_item.get_name==phase.get_name
+				phase_item.set_steps(phase.get_steps)
+				phase_item.set_status("ready")
+				phase_item.enable
+				return
+			end
+		end
+		phase.set_status("ready")
+		phase.enable
+		Phase.phase_push(phase)
 	end
 	def Phase.phase_addto_front(phase)
 		@@phase_queue.insert(0,phase)
@@ -107,11 +141,21 @@ class Phase
 		return @steps
 	end
 	def get_status
+		return @status
+	end
+	def get_enabled
 		return @enabled
 	end
 	def get_name
 		return @name
 	end
+	def set_status(status)
+		@status = status
+	end
+	def set_steps(steps)
+		@steps = steps
+	end
+	
 	def move_to_before(name_next)
                 temp_phase=self
                 @@phase_queue.delete_if{|item| item.name==self.name}

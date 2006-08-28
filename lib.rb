@@ -225,6 +225,7 @@ def guess_cflags
 end
 
 def xml_writeout
+	puts "entered"
 	doc = XML::Document.new()
 	doc.root = XML::Node.new('CommonDescription')
 	root = doc.root
@@ -288,7 +289,9 @@ def xml_writeout
 	cleancalls << "rm -rf $RPM_BUILD_ROOT"
 
 	root << files = XML::Node.new('Files')
+	puts "blobbing #{Pkgvars.get_buildroot}"
 	list_files = Dir.glob("#{Pkgvars.get_buildroot}/**/*")
+	puts list_files
 	list_files.each do |file|
 		file_name = file.split("#{Pkgvars.get_buildroot}/")[1]
 		if File.directory?(file)
@@ -299,7 +302,7 @@ def xml_writeout
 			sub_files << "/#{file_name}"
 		end
 	end
-
+	puts "Bye"
 	root << changelog = XML::Node.new('Changelog')
 	changelog << date = XML::Node.new('Date')
 	date << Time.now.strftime("%a %b %d %Y")

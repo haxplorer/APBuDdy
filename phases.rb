@@ -154,3 +154,13 @@ def generate_unpack_phase()
 	unpack_phase = Phase.new("unpack",steps)
 end
 
+
+
+def generate_predefined_phases
+	Phase.phase_push(Phase.new("getfile","",0))
+	Phase.phase_push(Phase.new("unpack","",0))
+	Phase.phase_push(Phase.new("perl","",0))
+	Phase.phase_push(Phase.new("gnu_configure","",0))
+	Phase.phase_push(Phase.new("gnu_make","",0))
+	Phase.phase_push(Phase.new("gnu_install","",0))
+end
