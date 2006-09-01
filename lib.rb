@@ -78,9 +78,17 @@ end
 
 def get_package_name()
 	if Pkgvars.get_pkg_name.size!=0
-	return Pkgvars.get_pkg_name
+		return Pkgvars.get_pkg_name
 	else
-	return File.basename(Pkgvars.get_src_path).split("-")[0]
+		name = ""
+		File.basename(Pkgvars.get_src_path).split("-").each do |part|
+			if(part.to_f==0.0)
+				name=name+"-"+part
+			else
+				break
+			end
+		end
+		return name
 	end
 end
 
@@ -97,6 +105,22 @@ def get_version
 	return Guess.new(version,60)
 
 end
+
+def get_release
+#Temporarily written just to fill in the field with a default value. After implementation of database integration, the release number will be incremented based on the build number, checking for the package entry against the database
+	return Guess.new("1",30)
+end
+
+def guess_group
+#Temporarily written just to fill in the field with a default value. After implementation of database integration, it would be checked with the value specified for the previous versions of the package
+	return Guess.new("Applications/System",30)
+end
+
+def guess_section
+#Temporarily written just to fill in the field with a default value. After implementation of database integration, it would be checked with the value specified for the previous versions of the package
+        return Guess.new("contrib/devel",30)
+end
+
 
 def download_file(url,destdir=".")
 	downloaded_file = File.new("#{destdir}/#{File.basename(url)}","w")
@@ -122,14 +146,16 @@ end
 
 license_content = license_file.read
 
-if (license_content =~ /GNU LESSER GENERAL PUBLIC LICENSE/)
+if (license_content =~ /GNU\ LESSER\ GENERAL\ PUBLIC\ LICENSE/)
 	return Guess.new("LGPL",90)
-elsif (license_content =~ /GNU LIBRARY GENERAL PUBLIC LICENSE/)
+elsif (license_content =~ /GNU\ LIBRARY\ GENERAL\ PUBLIC\ LICENSE/)
 	return Guess.new("Library GPL",90)
-elsif (license_content =~ /GNU GENERAL PUBLIC LICENSE/)
+elsif (license_content =~ /GNU\ GENERAL\ PUBLIC\ LICENSE/)
 	return Guess.new("GPL",90)
 elsif (license_content =~ /BSD/)
 	return Guess.new("BSD",90)
+else
+	return Guess.new("Other",30)
 end
 
 end
@@ -197,27 +223,27 @@ def guess_cflags
 ##FIX ME: many of the patterns used here may not be right, as i didnt get access to those architectures. plz fix the patterns, if you have access to such architectures.
 
 #Pentium II (Intel)
-	if File.new("/proc/cpuinfo").read =~ /Intel(R) Pentium(R) II/
+	if File.new("/proc/cpuinfo").read =~ /Intel\(R\)\ Pentium\(R\)\ II/
 		return Guess.new("-march=pentium2 -O3 -pipe -fomit-frame-pointer",90)
 
 #Celeron (Mendocino), aka Celeron1 (Intel)
-	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Celeron(R) /
+	elsif File.new("/proc/cpuinfo").read =~ /Intel\(R\)\ Celeron\(R\)/
 		return Guess.new("-march=pentium2 -O3 -pipe -fomit-frame-pointer",60)
 
 #Pentium III (Intel)
-	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Pentium(R) III/
+	elsif File.new("/proc/cpuinfo").read =~ /Intel\(R\)\ Pentium\(R\)\ III/
 		return Guess.new("-march=pentium3 -O3 -pipe -fomit-frame-pointer",90)
 
 #Celeron (Coppermine) aka Celeron2 (Intel)
-	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Celeron(R) 2/
+	elsif File.new("/proc/cpuinfo").read =~ /Intel\(R\)\ Celeron\(R\)\ 2/
 		return Guess.new("-march=pentium3 -O3 -pipe -fomit-frame-pointer",60)
 
 #Celeron (Willamette?) (Intel)
-	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Celeron(R) /
+	elsif File.new("/proc/cpuinfo").read =~ /Intel\(R\)\ Celeron\(R\)/
 		return Guess.new("-march=pentium4 -O3 -pipe -fomit-frame-pointer",60)
 
 #Pentium 4 (Intel)
-	elsif File.new("/proc/cpuinfo").read =~ /Intel(R) Pentium(R) 4/
+	elsif File.new("/proc/cpuinfo").read =~ /Intel\(R\)\ Pentium\(R\)\ 4/
 		return Guess.new("-march=pentium4 -O3 -pipe -fomit-frame-pointer",90)
 	else
 		return Guess.new("$RPM_OPT_FLAGS",60)
@@ -249,6 +275,15 @@ def xml_writeout
 	version << patches = XML::Node.new('Patches')
 	patches << patch = XML::Node.new('Patch')
 	patch << Pkgvars.get_patch_path
+=begin
+	if File.exist?("#{Pkgvars.get_extracted_dir}/scriptlet.xml")
+		scriptlet = XML::Document.file("#{Pkgvars.get_extracted_dir}/scriptlet.xml")
+		root = scriptlet.root
+		if root.child?
+			
+		end
+	end
+=end
 	version << vendor = XML::Node.new('Vendor')
 	version << splitrule = XML::Node.new('Splitrule')
 	version << section = XML::Node.new('Section')
@@ -267,7 +302,7 @@ def xml_writeout
 	
 	root << prep = XML::Node.new('Prep')
 	prep << setup = XML::Node.new('Setup')
-	prep << prep_patch = XML::Node.new('Patch')
+	prep << prep_patch = XML::Node.new('Setup-Patch')
 	
 	root << build = XML::Node.new('Build')
 	build << configure_flags = XML::Node.new('configure-flags')
@@ -316,3 +351,65 @@ def xml_writeout
 	format = true
 	doc.save("#{get_homedir}/.apbd/#{get_package_name}.xml", format)
 end
+
+def find_node(node_queue,name)
+	node_queue.each do |node_item|
+		if node_item.name==name
+			return node_item
+		end
+	end
+end
+
+
+def parse_enqueue(node,node_queue)
+	temp_queue = Array.new
+	if node.child?
+		child_node = node.child
+		temp_queue.push(child_node)
+		begin
+			if child_node.next?
+			child_node=child_node.next
+			end
+			temp_queue.push(child_node)
+		end while child_node.next?
+	end
+	node_queue.concat(temp_queue)
+	temp_queue.each do |node_item|
+		parse_enqueue(node_item,node_queue)
+		
+	end
+end
+
+def patch_scriptlet(desc_file,scriptlet_file)
+	puts "Patching the file #{desc_file} with #{scriptlet_file}"
+        xmldesc = XML::Document.file(desc_file)
+        xmlscript = XML::Document.file(scriptlet_file)
+        scriptroot = xmlscript.root
+        descroot = xmldesc.root
+        if scriptroot.child?
+        if_nodeset = scriptroot.find('if')
+	puts if_nodeset.length
+	node_queue = Array.new
+	parse_enqueue(descroot,node_queue)
+        if_nodeset.each do |node_item|
+                if node_item['distro'].chomp==Pkgvars.get_distro.chomp && node_item['version']==nil || node_item['distro'].chomp==Pkgvars.get_distro.chomp && node_item['version']==Pkgvars.get_version || node_item['distro'].chomp==nil && node_item['version']==Pkgvars.get_version
+			if node_item.child?
+			child_node = node_item.child
+			begin
+	                        parent_node = find_node(node_queue,child_node.name).parent
+				puts child_node.name
+				parent_node << new_node=XML::Node.new(child_node.name)
+				new_node << child_node.content
+				if child_node.next?
+					child_node=child_node.next
+				end
+			end while child_node.next?
+			end
+                end
+        end
+        end
+	puts "writing to file"
+        format = true
+        xmldesc.save("#{get_homedir}/.apbd/#{get_package_name}.xml", format)
+end
+

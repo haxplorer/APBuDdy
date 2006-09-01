@@ -47,18 +47,22 @@ class FrmMain < Qt::MainWindow
 	@engine_count = 0
 
         @btnBack = Qt::PushButton.new(centralWidget(), "btnBack")
-        @btnBack.setGeometry( Qt::Rect.new(180, 470, 81, 30) )
+        @btnBack.setGeometry( Qt::Rect.new(180, 490, 81, 30) )
 
         @btnNext = Qt::PushButton.new(centralWidget(), "btnNext")
-        @btnNext.setGeometry( Qt::Rect.new(280, 470, 81, 30) )
+        @btnNext.setGeometry( Qt::Rect.new(280, 490, 81, 30) )
 
         @txtprocessoutput = Qt::TextEdit.new(centralWidget(), "txtprocessoutput")
         @txtprocessoutput.setEnabled( true )
 	 @txtprocessoutput.setReadOnly( true )
-        @txtprocessoutput.setGeometry( Qt::Rect.new(21, 360, 500, 102) )
+        @txtprocessoutput.setGeometry( Qt::Rect.new(21, 365, 500, 112) )
+	
+	@lbltxtprocessoutput = Qt::Label.new(centralWidget(), "lblprocessoutput")
+	@lbltxtprocessoutput.setText("Messages")
+	@lbltxtprocessoutput.setGeometry( Qt::Rect.new(21, 350, 500, 15) )
 
         @btnQuit = Qt::PushButton.new(centralWidget(), "btnQuit")
-        @btnQuit.setGeometry( Qt::Rect.new(420, 470, 81, 30) )
+        @btnQuit.setGeometry( Qt::Rect.new(420, 490, 81, 30) )
 
         @frmMain = Qt::Frame.new(centralWidget(), "frmMain")
         @frmMain.setGeometry( Qt::Rect.new(20, 25, 490, 310) )
@@ -192,6 +196,7 @@ class FrmMain < Qt::MainWindow
 	Question.clear_asked_list
 	@engine_count-=1
 	engine(self,@engine_count)
+	@btnNext.setEnabled(true)
     end
 
     def goNext(*k)

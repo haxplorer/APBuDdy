@@ -39,7 +39,7 @@ when 2
 	Question.get_question_byname("arch").setask
 	w.proc_outbox_append("Searching for license..")
 	puts "license"
-#	Question.get_question_byname("license").setask
+	Question.get_question_byname("license").setask
 	w.proc_outbox_append("Detecting distribution..")
 	puts "distro"
 	Question.get_question_byname("distro").setask
@@ -50,17 +50,17 @@ when 2
 	generate_question_widget_list(w,Question.get_question_queue)
 when 3
 	Question.get_question_byname("maintainer").setask
-	Question.get_question_byname("summary").setask
-	Question.get_question_byname("description").setask
+	Question.get_question_byname("summary").setask("Please Fill this for a formal package")
+	Question.get_question_byname("description").setask("Please Fill this for a formal package")
 	generate_question_widget_list(w,Question.get_question_queue)
 when 4
-	Question.get_question_byname("buildroot").setask
 	Question.get_question_byname("configure_args").setask
 	Question.get_question_byname("cflags").setask
 	Question.get_question_byname("cxxflags").setask
         generate_question_widget_list(w,Question.get_question_queue)
-	w.proc_outbox_append("Trying to configure... Please Wait..")
 when 5
+	w.proc_outbox_append("Trying to configure... Please Wait..")
+	sleep 1
 	if(gnu_configure_check!=0)
 		Phase.phase_set(generate_configure_phase)
 	elsif (perl_check!=0)
@@ -73,12 +73,22 @@ when 5
 	if(gnu_install_check!=0)
 		Phase.phase_set(generate_install_phase)
 	end
-#	w.get_btnNext.clicked
-#when 6
 	Phase.run_phase_queue
+	Question.get_question_byname("packager_name").setask
+	Question.get_question_byname("packager_email").setask
+	Question.get_question_byname("changes").setask
+	Question.get_question_byname("scriptlet").setask
+	generate_question_widget_list(w,Question.get_question_queue)
+when 6
+	generate_question_widget_list(w,Question.get_question_queue)	
 	puts "Pkgvars.get_buildroot = #{Pkgvars.get_buildroot}"
 	w.proc_outbox_append("Writing out Abstract Package Build Description")
 	xml_writeout
+	if Pkgvars.get_scriptlet.chomp!="" && File.exist?(Pkgvars.get_scriptlet)
+	w.proc_outbox_append("Patching the scriptlet to APBD")
+	patch_scriptlet("#{get_homedir}/.apbd/#{get_package_name}.xml",Pkgvars.get_scriptlet)
+	end
+	w.get_btnNext.setEnabled(false)
 	w.proc_outbox_append("Job Done.. You may Quit now")
 end
 end

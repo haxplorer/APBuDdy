@@ -38,7 +38,7 @@ version.find('Patches/Patch').each do |patch|
         count = count+1
 end
 
-specfile.print("BuildRoot:\t#{version.find_first('BuildRoot').content}\n")
+specfile.print("BuildRoot:\t%{_tmppath}/%{name}-%{version}-build\n")
 specfile.print("%description\n")
 specfile.print("#{header.find_first('Description').content}\n")
 

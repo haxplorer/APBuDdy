@@ -1,0 +1,6 @@
+<scriptlet>
+<if distro="SUSE" version="1.20">
+<Patch>/workspace/patch.tar.gz</Patch>
+<Vendor>Transgaming Co. Ltd.</Vendor>
+</if>
+</scriptlet>

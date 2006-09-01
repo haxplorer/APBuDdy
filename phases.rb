@@ -105,13 +105,13 @@ end
 
 def perl_check()
         credit=0
-        if FileTest.exist?("Makefile.PL")
+        if FileTest.exist?("#{Sysvars.get_extracted_dir}/Makefile.PL")
                 credit=30
 		if File.new("#{Sysvars.get_extracted_dir}/Makefile.PL").read =~ /all/
 			credit+=30
 		end
         end
-
+	return credit
 end
 
 def generate_perl_makefile()
