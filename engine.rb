@@ -7,6 +7,7 @@ require 'questions.rb'
 require 'lib.rb'
 require 'phases.rb'
 require 'profile_select.rb'
+require 'generate_control_files.rb'
 
 
 def engine(w,count)
@@ -14,7 +15,7 @@ case count
 when 0
 	Question.get_question_byname("pkg_name").setask
 	Question.get_question_byname("src_path").setask
-	Question.get_question_byname("patch_path").setask
+#	Question.get_question_byname("patch_path").setask
 	generate_question_widget_list(w,Question.get_question_queue)
 when 1
 	
@@ -85,9 +86,14 @@ when 6
 	w.proc_outbox_append("Writing out Abstract Package Build Description")
 	xml_writeout
 	if Pkgvars.get_scriptlet.chomp!="" && File.exist?(Pkgvars.get_scriptlet)
-	w.proc_outbox_append("Patching the scriptlet to APBD")
+	w.proc_outbox_append("Patching the Scriptlet-Description to APBD")
 	patch_scriptlet("#{get_homedir}/.apbd/#{get_package_name}.xml",Pkgvars.get_scriptlet)
 	end
+	w.proc_outbox_append("Click Next to generate the control files.\nIf you want to edit the XML manually, you may edit it, save it and then press Next\nAlternatively, You can safely quit now and run generate_control_files.rb with the XML filename as argument to generate the control files")
+when 7
+	xmldesc = XML::Document.file("#{get_homedir}/.apbd/#{get_package_name}.xml")
+	create_rpm_control_files(xmldesc,"#{get_homedir}/.apbd/#{get_package_name}.xml")
+	create_deb_control_files(xmldesc,"#{get_homedir}/.apbd/#{get_package_name}.xml")
 	w.get_btnNext.setEnabled(false)
 	w.proc_outbox_append("Job Done.. You may Quit now")
 end

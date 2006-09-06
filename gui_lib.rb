@@ -1,5 +1,6 @@
 require 'Qt'
 require 'Classes.rb'
+require 'lib.rb'
 
 class Question_options_widget < Qt::Widget
 
@@ -112,50 +113,88 @@ class Question_combo_widget < Qt::Widget
 end
 
 
-class Add_phase_widget < Qt::Widget
+class Add_phase_widget < Qt::Dialog
 
-        slots 'add_phase()'
+        slots 'add_phase()',
+	'load_patch_template()',
+	'load_source_template()'
         def initialize(parent=nil)
-                super(parent)
-		self.setFixedHeight(35)
-                @hbox = Qt::HBox.new(self)
-                @hbox.setGeometry( Qt::Rect.new(40, 0, 450, 30) )
-                @lbl = Qt::Label.new(@hbox)
-                @lbl.setText("Add command")
-		@txt = Qt::LineEdit.new(@hbox)
-		@combo_pos = Qt::ComboBox.new(@hbox)
+                super(parent,"name",true)
+		self.setGeometry( Qt::Rect.new(0, 0, 450, 120) )
+		@vbox = Qt::VBox.new(self)
+		@vbox.setGeometry( Qt::Rect.new(0, 0, 450, 120) )
+                @hbox1 = Qt::HBox.new(@vbox)
+                @hbox1.setGeometry( Qt::Rect.new(0, 0, 450, 30) )
+                @lbl = Qt::Label.new(@hbox1)
+                @lbl.setText("Name")
+		@txt = Qt::LineEdit.new(@hbox1)
+		@combo_pos = Qt::ComboBox.new(@hbox1)
                 @combo_pos.insertItem("before")
 		@combo_pos.insertItem("after")
 		@combo_pos.insertItem("first")
 		@combo_pos.insertItem("last")
-                @combo_phase = Qt::ComboBox.new(@hbox)
+                @combo_phase = Qt::ComboBox.new(@hbox1)
                 Phase.get_phase_queue.each do |phase_item|
                         @combo_phase.insertItem(phase_item.get_name)
                 end
-		@btn_add = Qt::PushButton.new(@hbox)
+		@btn_add = Qt::PushButton.new(@hbox1)
 		@btn_add.setText("Add")
-		@btn_cancel = Qt::PushButton.new(@hbox)
+		@btn_cancel = Qt::PushButton.new(@hbox1)
 		@btn_cancel.setText("Cancel")
+		@hbox2 = Qt::HBox.new(@vbox)
+		@hbox2.setGeometry( Qt::Rect.new(0, 40, 450, 60) )
+		@lbl_cmds = Qt::Label.new(@hbox2)
+		@lbl_cmds.setText("Commands")
+		@txt_cmds = Qt::MultiLineEdit.new(@hbox2)
+		@hbox3 = Qt::HBox.new(@vbox)
+		@hbox3.setGeometry( Qt::Rect.new(0, 110, 450, 30) )
+		@btn_Patch_template = Qt::PushButton.new(@hbox3)
+		@btn_Patch_template.setText("Load Patch Template")
+		@btn_Source_template = Qt::PushButton.new(@hbox3)
+		@btn_Source_template.setText("Load Source Template")
 	        Qt::Object.connect(@btn_add, SIGNAL("clicked()"), self, SLOT("add_phase()") )
 		Qt::Object.connect(@btn_cancel, SIGNAL("clicked()"), self, SLOT("close()") )
+		Qt::Object.connect(@btn_Patch_template, SIGNAL("clicked()"), self, SLOT("load_patch_template()") )
+		Qt::Object.connect(@btn_Source_template, SIGNAL("clicked()"), self, SLOT("load_source_template()") )
         end
 
 	def add_phase
-		if @combo_pos.currentText=="before" && @txt.text.size>0
-			Phase.phase_new_before(@txt.text,@txt.text,@combo_phase.currentText,1)
-		elsif @combo_pos.currentText=="after" && @txt.text.size>0
-			Phase.phase_new_after(@txt.text,@txt.text,@combo_phase.currentText,1)
-		elsif @combo_pos.currentText=="first" && @txt.text.size>0
-			temp_phase = Phase.new(@txt.text,@txt.text,@combo_phase.currentText)
-			Phase.phase_addto_front(temp_phase)
-		elsif @combo_pos.currentText=="last" && @txt.text.size>0
-			temp_phase = Phase.new(@txt.text,@txt.text,@combo_phase.currentText)
-			Phase.phase_push(temp_phase)
+		if(Pkgvars.get_src_path=="")
+			msgbox=Qt::MessageBox.new()
+			msgbox.setText("Sorry! You can do this only after specifying the Main Source File")
+			msgbox.show
+			return
+		end
+		if @txt.text.size>0 && @txt_cmds.text.split("@").size==1
+			Phase.add_phase(@txt.text,@txt_cmds.text,@combo_pos.currentText,@combo_phase.currentText)
+		elsif @txt_cmds.text.split("@").size>1
+			if (@txt_cmds.text =~ /<path>/)!=nil
+				msgbox=Qt::MessageBox.new()
+	                        msgbox.setText("Invalid information")
+        	                msgbox.show
+                        return
+			end
+			puts "Patch or Source"
+			Phase.add_patch_source(@txt.text,@txt_cmds.text,@combo_pos.currentText,@combo_phase.currentText)
+		elsif @txt_cmds.text.size==0
+			msgbox=Qt::MessageBox.new()
+			msgbox.setText("Invalid information")
+			msgbox.show
+			return
 		end
 		close
 	end
+	
+	def load_patch_template
+		@txt_cmds.append("@Patch@0@<path>@")
+	end
+
+	def load_source_template
+		@txt_cmds.append("@Source@@<path>@")
+	end
 
 end
+
 
 
 def generate_question_widget_list(w,question_queue)

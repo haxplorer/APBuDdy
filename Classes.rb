@@ -18,15 +18,32 @@ class Guess
         end
 end
 
+class Tempvars
+	@@path = String.new
+	@@extracted_dir = String.new
+	def Tempvars.set_path(path)
+		@@path = path
+	end
+	def Tempvars.set_extracted_dir(path)
+		@@extracted_dir = "#{Sysvars.get_source_dir}/#{path}"
+	end
+	def Tempvars.get_path
+		return @@path
+	end
+	def Tempvars.get_extracted_dir
+		return @@extracted_dir
+	end
+end
+
 class Phase
 
 	@@phase_queue = Array.new
 
-	def initialize(name,steps,enabled=1)
+	def initialize(name,steps,enabled=1,status="created")
 		@name=name
 		@steps=steps
 		@enabled=enabled
-		@status="created"
+		@status=status
 	end
 #	def Phase.phase_empty(name)
 #		@name=name
@@ -80,6 +97,87 @@ class Phase
 		end
                 end
 		
+	end
+	def Phase.add_phase(name,steps,pos,rel_phase)
+		if pos=="before"
+		Phase.phase_new_before(name,steps,rel_phase,1)
+		elsif pos=="after"
+		Phase.phase_new_after(name,steps,rel_phase,1)
+		elsif pos=="first"
+		temp_phase = Phase.new(name,steps,rel_phase)
+		Phase.phase_addto_front(temp_phase)
+		elsif pos=="last"
+		temp_phase = Phase.new(name,steps,rel_phase)
+		Phase.phase_push(temp_phase)
+		end
+	end
+	def Phase.add_patch_source(name,steps,pos,rel_phase)
+		step_list=steps.split("\n")
+		if pos=="after"
+			pos="before"
+	                @@phase_queue.each_with_index do |phase_item,index|
+                        if phase_item.get_name==rel_phase
+				rel_phase=@@phase_queue[index+1].get_name
+                        end
+        	        end
+
+		end
+		if pos=="first"
+			pos="before"
+                        rel_phase=@@phase_queue[0].get_name
+		end
+		if pos=="before"
+		step_list.each do |step_item|
+			if step_item.split("@")[1]=="Patch"
+				Pkgvars.patch_list_push(step_item.split("@")[3])
+				temp_phase = generate_getfile_phase(step_item.split("@")[3])
+				Phase.phase_new_before(temp_phase.get_name,temp_phase.get_steps,rel_phase,1)
+				temp_phase = generate_unpack_phase(Tempvars.get_path)
+                                Phase.phase_new_before(temp_phase.get_name,temp_phase.get_steps,rel_phase,1)
+				Phase.run_phase_queue
+				temp_phase = generate_patch_phase(Tempvars.get_extracted_dir,step_item.split("@")[2])
+				Phase.phase_new_before(temp_phase.get_name,temp_phase.get_steps,rel_phase,1)
+			elsif step_item.split("@")[1]=="Source"
+				Pkgvars.src_list_push(step_item.split("@")[3])
+				temp_phase = generate_getfile_phase(step_item.split("@")[3])
+				Phase.phase_new_before(temp_phase.get_name,temp_phase.get_steps,rel_phase,1)
+                                temp_phase = generate_unpack_phase(Tempvars.get_path)
+				Phase.phase_new_before(temp_phase.get_name,temp_phase.get_steps,rel_phase,1)
+                                Phase.run_phase_queue
+				temp_phase = generate_merge_source_phase()
+				Phase.phase_new_before(temp_phase.get_name,temp_phase.get_steps,rel_phase,1)
+			end
+		end
+		end
+		if pos=="last"
+		step_list.each do |step_item|
+                        if step_item.split("@")[1]=="Patch"
+                                Pkgvars.patch_list_push(step_item.split("@")[3])
+                                Phase.push(generate_getfile_phase(step_item.split("@")[3]))
+                                @@phase_queue.last.enable
+                                @@phase_queue.last.set_status("ready")
+                                Phase.push(generate_unpack_phase(Tempvars.get_path))
+                                @@phase_queue.last.enable
+                                @@phase_queue.last.set_status("ready")
+                                Phase.run_phase_queue
+                                Phase.push(generate_patch_phase(Tempvars.get_extracted_dir,step_item.split("@")[2]))
+                                @@phase_queue.last.enable
+                                @@phase_queue.last.set_status("ready")
+                        elsif step_item.split("@")[0]=="Source"
+                                Pkgvars.src_list_push(step_item.split("@")[3])
+                                Phase.push(generate_getfile_phase(step_item.split("@")[3]))
+                                @@phase_queue.last.enable
+                                @@phase_queue.last.set_status("ready")
+                                Phase.push(generate_unpack_phase(Tempvars.get_path))
+                                @@phase_queue.last.enable
+                                @@phase_queue.last.set_status("ready")
+                                Phase.run_phase_queue
+                                Phase.push(generate_merge_source_phase())
+                                @@phase_queue.last.enable
+                                @@phase_queue.last.set_status("ready")
+                        end
+		end
+		end
 	end
 	def Phase.phase_queue_concat(ext_queue)
 		@@phase_queue.concat(ext_queue)
@@ -360,6 +458,8 @@ class Pkgvars
 	@@packager_email = String.new
 	@@changes = String.new
 	@@scriptlet = String.new
+	@@patch_list = Array.new
+	@@src_list = Array.new
 
 	def Pkgvars.set_var(var_name,value)
 		case var_name
@@ -370,8 +470,10 @@ class Pkgvars
 			if(@@pkg_name == "")
 			@@pkg_name = File.basename(@@src_path).split("-")[0]
 			end
+#			@@src_list.unshift(@src_path)
 			when "patch_path"
 			@@patch_path = value
+			@@patch_list.unshift(@@patch_path)
 			when "version"
 			@@version = value
 			when "release"
@@ -416,7 +518,7 @@ class Pkgvars
 			@@scriptlet = value
 		end
 	end
-	
+
 	def Pkgvars.get_pkg_name
 		return @@pkg_name
 	end
@@ -511,6 +613,18 @@ class Pkgvars
 	def Pkgvars.get_scriptlet
 		return @@scriptlet
 	end
+	def Pkgvars.get_patch_list
+		return @@patch_list
+	end
+	def Pkgvars.get_src_list
+		return @@src_list
+	end
+	def Pkgvars.patch_list_push(value)
+		@@patch_list.push(value)
+	end
+	def Pkgvars.src_list_push(value)
+		@@src_list.push(value)
+	end
 
 end
 
@@ -518,7 +632,7 @@ end
 class Sysvars
 
         @@rpm_build_root="/tmp/tmproot/"
-        @@source_dir="#{get_homedir}/.apbd/SOURCES"
+        @@source_dir="#{`echo $HOME`.chomp}/.apbd/SOURCES"
         @@extracted_dir=String.new
         def Sysvars.set_source_dir(dir)
                 @@source_dir = dir
@@ -539,4 +653,3 @@ class Sysvars
                 return @@extracted_dir
         end
 end
-

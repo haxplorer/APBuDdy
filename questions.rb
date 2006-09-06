@@ -24,7 +24,7 @@ def generate_predefined_questions
 	Question.create_text_question("section","Section")
 	Question.create_text_question("summary","Summary")
 	Question.create_text_question("description","Description")
-	Question.create_text_question("scriptlet","Scriptlet File")
+	Question.create_text_question("scriptlet","Scriptlet XML File")
 end
 
         $hash_guess = Hash.new()

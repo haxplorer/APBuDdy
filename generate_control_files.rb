@@ -19,7 +19,7 @@ post = root.find_first('Post')
 clean = root.find_first('Clean')
 version = header.find_first('Package/Version')
 
-specfile = File.new(args.split(".")[0].concat(".spec"),"w")
+specfile = File.new("#{File.dirname(args)}/#{File.basename(args).split(".")[0]}.spec","w")
 
 specfile.print("Name:\t#{header.find_first('Package')['Name']}\n")
 specfile.print("Version:\t#{version['value']}\n")
@@ -48,7 +48,9 @@ end
 
 specfile.print("\n%prep\n")
 specfile.print("%setup -n %{name}-%{version}\n")
+if version.find('Patches/Patch').length>0
 specfile.print("%patch -p1")
+end
 
 specfile.print("\n%build\n")
 
@@ -67,19 +69,22 @@ build.find('make-target').each do |mtarget|
 end
 
 specfile.print("\n\n%install\n")
-specfile.print("cd %{name}-%{version}-build\n")
+#specfile.print("cd %{name}-%{version}-build\n")
 
 specfile.print("make ")
 
-install.find('destdir').each do |dest|
-	specfile.print("DESTDIR=#{dest.content}")
-end
+specfile.print("DESTDIR=$RPM_BUILD_ROOT ")
+#install.find('destdir').each do |dest|
+#	specfile.print("DESTDIR=#{dest.content}")
+#end
 
 install.find('install-target').each do |inst|
         specfile.print("#{inst.content}\n")
 end
 
-specfile.print("\n%post\n")
+if post.find('Post-calls').length>0
+	specfile.print("\n%post\n")
+end
 
 post.find('Post-calls').each do |postcalls|
 	specfile.print("#{postcalls.content}\n")
@@ -133,7 +138,7 @@ root = xmldesc.root
 header = root.find_first('Header')
 version = header.find_first('Package/Version')
 
-controlfile = File.new("control","w")
+controlfile = File.new("#{File.dirname(args)}/#{File.basename(args).split(".")[0]}.control","w")
 
 controlfile.print("Package: #{header.find_first('Package')['Name']}\n")
 controlfile.print("Version: #{version['value']}-#{version.find_first('Release').content}\n")

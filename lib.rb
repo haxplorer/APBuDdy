@@ -97,11 +97,18 @@ def get_version
 
 	package_path = Pkgvars.get_src_path
 	version = ""
-	Pkgvars.get_src_path.split("/")[Pkgvars.get_src_path.split("/").size-1].split("-").each do |part|
+	File.basename(Pkgvars.get_src_path).split("-").each do |part|
 	if part.to_f!=0.0
-		version = part.split(".")[0].concat(".").concat(part.split(".")[1])
+#		version = part.split(".")[0].concat(".").concat(part.split(".")[1])
+		part.split(".").each do |piece|
+			if piece!="tar" && piece!="gz" && piece!="bz2" && piece!="zip"
+				version.concat("#{piece}.")
+			end
+		
+		end
 	end
 	end
+	version.chop!
 	return Guess.new(version,60)
 
 end
@@ -177,26 +184,25 @@ def get_sourcedir()
 		return "$HOME/.apbd/SOURCES"
 	end
 end
-
-def unpack(filename)
-	name = File.basename(filename)
+=begin
+def unpack(pkg)
+	name = File.basename(pkg.get_path)
 	type = name.split(".")[name.split(".").size-1]
 	if type=="gz"
 		arg = "z"
 	elsif type=="bz2"
 		arg="j"
 	end
-	sourcedir = get_sourcedir()
-	system("tar -t#{arg}f #{filename} >/tmp/#{name}.qst")
+	system("tar -t#{arg}f #{pkg.get_path} >/tmp/#{name}.qst")
 	system("awk -F \"/\" '{print $1}' /tmp/#{name}.qst | uniq | wc -l >/tmp/#{name}_no_of_folders_in_tar")
 	if File.new("/tmp/#{name}_no_of_folders_in_tar","r").gets.to_i>1
 		system("rm /tmp/#{name}_no_of_folders_in_tar")
 		system("mkdir #{name.split(".")[0]}; cd #{name.split(".")[0]}")
 	end
-	system("cd #{sourcedir};tar -x#{arg}vf #{filename} >/tmp/#{name}.qsx")
-	Sysvars.set_extracted_dir(`cat /tmp/#{File.basename(Pkgvars.get_src_path)}.qst | awk -F '/' '{print $1}' | uniq`.chomp)
+	system("cd #{sourcedir};tar -x#{arg}vf #{pkg.get_path} >/tmp/#{name}.qsx")
+	pkg.set_extracted_dir(`cat /tmp/#{File.basename(pkg.get_path)}.qst | awk -F '/' '{print $1}' | uniq`.chomp)
 end
-
+=end
 def src_validate
 	if !FileTest.exist?(Pkgvars.get_src_path) && !(Pkgvars.get_src_path.split("://")[0]=="http" || Pkgvars.get_src_path.split("://")[0]=="ftp")
 		return 0
@@ -246,9 +252,10 @@ def guess_cflags
 	elsif File.new("/proc/cpuinfo").read =~ /Intel\(R\)\ Pentium\(R\)\ 4/
 		return Guess.new("-march=pentium4 -O3 -pipe -fomit-frame-pointer",90)
 	else
-		return Guess.new("$RPM_OPT_FLAGS",60)
+		return Guess.new("",60)
 	end
 end
+
 
 def xml_writeout
 	puts "entered"
@@ -273,17 +280,11 @@ def xml_writeout
 	version << buildroot = XML::Node.new('BuildRoot')
 	buildroot << Pkgvars.get_buildroot
 	version << patches = XML::Node.new('Patches')
-	patches << patch = XML::Node.new('Patch')
-	patch << Pkgvars.get_patch_path
-=begin
-	if File.exist?("#{Pkgvars.get_extracted_dir}/scriptlet.xml")
-		scriptlet = XML::Document.file("#{Pkgvars.get_extracted_dir}/scriptlet.xml")
-		root = scriptlet.root
-		if root.child?
-			
-		end
+	Pkgvars.get_patch_list.each do |patch_item|
+		patches << patch = XML::Node.new('Patch')
+		puts patch_item
+		patch << patch_item
 	end
-=end
 	version << vendor = XML::Node.new('Vendor')
 	version << splitrule = XML::Node.new('Splitrule')
 	version << section = XML::Node.new('Section')
@@ -291,6 +292,11 @@ def xml_writeout
 	header << sources = XML::Node.new('Sources')
 	sources << source = XML::Node.new('Source')
 	source << Pkgvars.get_src_path
+	Pkgvars.get_src_list.each do |src_item|
+		sources << source = XML::Node.new('Source')
+		puts src_item
+		source << src_item
+	end
 	header << maintainer = XML::Node.new('Maintainer')
 	maintainer << Pkgvars.get_maintainer
 	header << license = XML::Node.new('License')
@@ -317,7 +323,7 @@ def xml_writeout
 	install_target << "install"
 	
 	root << post = XML::Node.new('Post')
-	post << post_calls = XML::Node.new('Post-calls')
+#	post << post_calls = XML::Node.new('Post-calls')
 	
 	root << clean = XML::Node.new('Clean')
 	clean << cleancalls = XML::Node.new('Clean-calls')
@@ -330,8 +336,10 @@ def xml_writeout
 	list_files.each do |file|
 		file_name = file.split("#{Pkgvars.get_buildroot}/")[1]
 		if File.directory?(file)
+			if ((`rpm -qf /#{file_name}` =~ /not\ owned/)!=nil  || (`rpm -qf /#{file_name} 2>&1` =~ /error/)!=nil)
 			files << dir = XML::Node.new("dir")
 			dir << "/#{file_name}"
+			end
 		else
 			files << sub_files = XML::Node.new("files")
 			sub_files << "/#{file_name}"

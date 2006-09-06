@@ -116,26 +116,27 @@ end
 
 def generate_perl_makefile()
         steps = "perl ./Makefile.PL --all "
-        perl_phase = Phase.new("perl",steps)
+        perl_phase = Phase.new("perl_configure",steps)
         return perl_phase
 
 end
 
-def generate_getfile_phase()
+def generate_getfile_phase(pkg_path=Pkgvars.get_src_path)
 	if !FileTest.exist?("#{get_homedir()}/.apbd/PACKAGES/")
 		system("mkdir #{get_homedir()}/.apbd/PACKAGES/")
 	end
-	if FileTest.exist?(Pkgvars.get_src_path)
-		steps = "cp #{Pkgvars.get_src_path} #{get_homedir()}/.apbd/PACKAGES/"
-	elsif Pkgvars.get_src_path.split("://")[0]=="http" || Pkgvars.get_src_path.split("://")[0]=="ftp"
-		steps = "cd #{get_homedir()}/.apbd/PACKAGES; wget #{Pkgvars.get_src_path}"
+	if FileTest.exist?(pkg_path)
+		steps = "cp #{pkg_path} #{get_homedir()}/.apbd/PACKAGES/"
+	elsif pkg_path.split("://")[0]=="http" || Pkgvars.get_src_path.split("://")[0]=="ftp"
+		steps = "cd #{get_homedir()}/.apbd/PACKAGES; wget #{pkg_path}"
 	end
+	Tempvars.set_path("#{get_homedir()}/.apbd/PACKAGES/#{File.basename(pkg_path)}")
 	getfile_phase = Phase.new("getfile",steps)
 	return getfile_phase
 end
 
-def generate_unpack_phase()
-        name = File.basename(Pkgvars.get_src_path)
+def generate_unpack_phase(pkg_path=Pkgvars.get_src_path)
+        name = File.basename(pkg_path)
         type = name.split(".")[name.split(".").size-1]
         if type=="gz"
                 arg = "z"
@@ -143,23 +144,40 @@ def generate_unpack_phase()
                 arg="j"
         end
         sourcedir = get_sourcedir()
-        system("tar -t#{arg}f #{get_homedir()}/.apbd/PACKAGES/#{File.basename(Pkgvars.get_src_path)} >/tmp/#{name}.qst")
+        system("tar -t#{arg}f #{get_homedir()}/.apbd/PACKAGES/#{File.basename(pkg_path)} >/tmp/#{name}.qst")
         system("awk -F \"/\" '{print $1}' /tmp/#{name}.qst | uniq | wc -l >/tmp/#{name}_no_of_folders_in_tar")
         if File.new("/tmp/#{name}_no_of_folders_in_tar","r").gets.to_i>1
                 system("rm /tmp/#{name}_no_of_folders_in_tar")
                 system("mkdir #{name.split(".")[0]}; cd #{name.split(".")[0]}")
         end
+	if pkg_path == Pkgvars.get_src_path
 	Sysvars.set_extracted_dir(`cat /tmp/#{name}.qst | awk -F '/' '{print $1}' | uniq`.chomp)
-        steps = "cd #{sourcedir};tar -x#{arg}vf #{get_homedir()}/.apbd/PACKAGES/#{File.basename(Pkgvars.get_src_path)} >/tmp/#{name}.qsx"
+	else
+	Tempvars.set_extracted_dir(`cat /tmp/#{name}.qst | awk -F '/' '{print $1}' | uniq`.chomp)
+	end
+        steps = "cd #{sourcedir};tar -x#{arg}vf #{get_homedir()}/.apbd/PACKAGES/#{File.basename(pkg_path)} >/tmp/#{name}.qsx"
 	unpack_phase = Phase.new("unpack",steps)
+	return unpack_phase
 end
 
+def generate_patch_phase(extracted_dir,n)
+	steps = "for each in "
+	steps.concat("#{extracted_dir}/*.patch")
+	steps.concat("; do patch -p#{n} < $each ; done")
+	patch_phase = Phase.new("Patch",steps)
+	return patch_phase
+end
 
+def generate_merge_source_phase(extra_src_path=Tempvars.get_extracted_dir,main_src_path=Sysvars.get_extracted_dir)
+	steps = "cp -a #{extra_src_path}/* #{main_src_path}/"
+	merge_source_phase = Phase.new("Merge_Source",steps)
+	return merge_source_phase
+end
 
 def generate_predefined_phases
 	Phase.phase_push(Phase.new("getfile","",0))
 	Phase.phase_push(Phase.new("unpack","",0))
-	Phase.phase_push(Phase.new("perl","",0))
+	Phase.phase_push(Phase.new("perl_configure","",0))
 	Phase.phase_push(Phase.new("gnu_configure","",0))
 	Phase.phase_push(Phase.new("gnu_make","",0))
 	Phase.phase_push(Phase.new("gnu_install","",0))
