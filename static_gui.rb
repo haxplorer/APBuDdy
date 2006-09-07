@@ -9,6 +9,7 @@
 require 'Qt'
 require 'gui_lib.rb'
 require 'Classes.rb'
+require 'profile_select.rb'
 
 
 
@@ -20,6 +21,7 @@ class FrmMain < Qt::MainWindow
     'helpContents()',
     'helpAbout()',
     'extrasAddCommand()',
+    'extrasChangeProfile()',
     'goBack()',
     'goNext()',
     'selectFile()',
@@ -78,6 +80,7 @@ class FrmMain < Qt::MainWindow
         @helpAboutAction= Qt::Action.new(self, "helpAboutAction")
         @fileNewImport_templateAction= Qt::Action.new(self, "fileNewImport_templateAction")
         @extrasAddCommandAction= Qt::Action.new(self, "extrasAddCommandAction")
+	@extrasChangeProfileAction= Qt::Action.new(self, "extrasChangeProfileAction")
         @fileStart_AgainAction= Qt::Action.new(self, "fileStart_AgainAction")
 
 
@@ -94,6 +97,7 @@ class FrmMain < Qt::MainWindow
 
         @Extras = Qt::PopupMenu.new( self )
         @extrasAddCommandAction.addTo( @Extras )
+	@extrasChangeProfileAction.addTo( @Extras )
         @MenuBar.insertItem( "", @Extras, 2 )
 
         @helpMenu = Qt::PopupMenu.new( self )
@@ -113,6 +117,7 @@ class FrmMain < Qt::MainWindow
         Qt::Object.connect(@helpAboutAction, SIGNAL("activated()"), self, SLOT("helpAbout()") )
         Qt::Object.connect(@btnQuit, SIGNAL("clicked()"), self, SLOT("close()") )
         Qt::Object.connect(@extrasAddCommandAction, SIGNAL("activated()"), self, SLOT("extrasAddCommand()") )
+	Qt::Object.connect(@extrasChangeProfileAction, SIGNAL("activated()"), self, SLOT("extrasChangeProfile()") )
         Qt::Object.connect(@btnBack, SIGNAL("clicked()"), self, SLOT("goBack()") )
         Qt::Object.connect(@btnNext, SIGNAL("clicked()"), self, SLOT("goNext()") )
         Qt::Object.connect(@fileStart_AgainAction, SIGNAL("activated()"), self, SLOT("fileStartAgain()") )
@@ -152,6 +157,8 @@ class FrmMain < Qt::MainWindow
         @fileNewImport_templateAction.setAccel(Qt::KeySequence.new(nil))
         @extrasAddCommandAction.setText(trUtf8("Add Command"))
         @extrasAddCommandAction.setMenuText(trUtf8("Add Command"))
+	@extrasChangeProfileAction.setText(trUtf8("Change Profile"))
+        @extrasChangeProfileAction.setMenuText(trUtf8("Change Profile"))
         @fileStart_AgainAction.setText(trUtf8("&Start Again"))
         @fileStart_AgainAction.setMenuText(trUtf8("&Start Again"))
         if !@MenuBar.findItem(1).nil?
@@ -186,6 +193,12 @@ class FrmMain < Qt::MainWindow
     def extrasAddCommand(*k)
 	cmd_widget = Add_phase_widget.new
 	cmd_widget.show
+    end
+
+    def extrasChangeProfile(*k)
+	p = FrmProfile.new
+	p.show
+	Question.set_expertise(File.new("#{get_homedir}/.apbd/.profile").read)
     end
 
     def goBack(*k)

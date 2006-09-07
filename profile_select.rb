@@ -8,6 +8,7 @@
 
 
 require 'Qt'
+require 'Classes.rb'
 
 class FrmProfile < Qt::Dialog
 
@@ -81,7 +82,9 @@ class FrmProfile < Qt::Dialog
     def profile_write(*k)
 	path = `echo $HOME`.chomp
 	system("mkdir #{path}/.apbd/")
+	system("rm #{path}/.apbd/.profile")
 	File.new("#{path}/.apbd/.profile","w").print(@bgrpQuery.selected.text)
+	Question.set_expertise(@bgrpQuery.selected.text)
 	close()
     end
 
