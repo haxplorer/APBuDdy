@@ -291,7 +291,11 @@ def xml_writeout
 	section << Pkgvars.get_section
 	header << sources = XML::Node.new('Sources')
 	sources << source = XML::Node.new('Source')
+	if (Pkgvars.get_src_path =~ /http/)!=nil
 	source << Pkgvars.get_src_path
+	else
+	source << File.basename(Pkgvars.get_src_path)
+	end
 	Pkgvars.get_src_list.each do |src_item|
 		sources << source = XML::Node.new('Source')
 		puts src_item

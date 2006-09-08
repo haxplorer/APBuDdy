@@ -61,8 +61,23 @@ build.find('configure-flags').each do |cflag|
 	end
 	if (cflag.content!="")
 		specfile.print("--#{cflag.content}")
+	else
+		specfile.print("--prefix=/usr")
 	end
 end
+
+if build.find_first('CFLAGS').content!=""
+	specfile.print("\n#{build.find_first('CFLAGS').content}")
+else
+	specfile.print("\nexport CFLAGS=$RPM_OPT_FLAGS")
+end
+
+if build.find_first('CXXFLAGS').content!=""
+        specfile.print("\n#{build.find_first('CFLAGS').content}")
+else
+        specfile.print("\nexport CXXFLAGS=$RPM_OPT_FLAGS")
+end
+
 
 build.find('make-target').each do |mtarget|
 	specfile.print("\nmake #{mtarget.content}\n")
